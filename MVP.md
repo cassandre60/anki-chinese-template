@@ -46,10 +46,12 @@ sync → export → release loop.
   empty field; the More section and its toggle self-remove when empty.
 - Tooling: field bootstrap (`fetch_anki_fields.py`), one-shot model/deck
   creation (`bootstrap_chinese_model.py`), idempotent field descriptions
-  (`set_field_descriptions.py`), snapshotted sync (`sync_to_anki.py`),
-  apkg export (`release_apkg.py`), `verify` gate, `finish.sh` release loop,
+  (`set_field_descriptions.py`), sample-card seeding
+  (`seed_sample_cards.py`), snapshotted sync (`sync_to_anki.py`),
+  verified apkg build (`build_apkg.py`, ADR 009), `verify` gate,
+  `finish.sh` release loop,
   regression tests (compactor + templates + front-modes + mature-content +
-  Pinyin tones + layout + scenic-band + back-More contracts).
+  Pinyin tones + layout + scenic-band + back-More + apkg contracts).
 
 ## Excluded capabilities
 

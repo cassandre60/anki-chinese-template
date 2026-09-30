@@ -22,9 +22,10 @@ Anki renderers: Desktop Qt6 WebEngine · AnkiDroid WebView
   │  live services at render time: AnkiConnect :8765 (desktop only)
   ↓
 Tooling (stdlib-only): fetch_anki_fields.py · sync_to_anki.py ·
-                       release_apkg.py · verify · finish.sh
+                       build_apkg.py · verify · finish.sh
                        bootstrap_chinese_model.py (one-shot, create-only)
                        set_field_descriptions.py (idempotent)
+                       seed_sample_cards.py (one-shot, create-only)
 ```
 
 ## Components
@@ -181,7 +182,11 @@ fetch_anki_fields.py → .anki_fields.json (gitignored, read-only dump)
 bootstrap_chinese_model.py → one-shot: createModel + createDeck (refuses to re-run)
 set_field_descriptions.py  → idempotent: writes the Fields-dialog descriptions
 sync_to_anki.py      → snapshot backups/<ts>/, push Front/Back/CSS
-release_apkg.py      → exportPackage deck → dist/*.apkg (gitignored)
+seed_sample_cards.py  → 3 sample notes so the deck (and the apkg) is non-empty
+build_apkg.py         → read the live deck over Anki-Connect, write a
+                        schema-11 collection with stdlib sqlite3+zipfile,
+                        then RE-OPEN it and assert the note type, deck and
+                        note count (hard gate; ADR 009)
 verify               → local quality gate (tests only, no side effects)
 finish.sh            → verify → stamp → sync → export → commit → push main → release (--target main) → fetch tag
 tests/               → test_compactor.py + test_templates.py
@@ -222,6 +227,13 @@ entity graph exists beyond what is shown.
 - **007** Pinyin replaces furigana: a separate plain-text field plus
   tone-coloured syllable spans, and a `P` visibility toggle in place of the
   `F` full-card furigana mode.
+- **008** The compactor targets Chinese dictionary structure only; the
+  Japanese structured-content sense selectors were removed rather than left
+  as dead rules.
+- **009** The apkg is built in-repo and verified after writing, because
+  Anki-Connect's `exportPackage` silently exports the Default deck on
+  Anki 26.x — a release asset that installs the wrong templates while
+  reporting success.
 
 ## Evolution rule
 

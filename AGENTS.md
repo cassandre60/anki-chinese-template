@@ -85,8 +85,9 @@ After **every** template/CSS modification, finish with exactly one command:
 
 Chain (stops on first failure): `0.` `./verify` (side-effect-free gate) →
 `1.` version stamp → `2.` `sync_to_anki.py` (pre-sync snapshot to gitignored
-`backups/<timestamp>/`) → `3.` `release_apkg.py` (deck `My Life Decks::Chinese`
-via `exportPackage` to gitignored `dist/*.apkg`) → `4.` commit → `5.` push
+`backups/<timestamp>/`) → `3.` `build_apkg.py` (deck `My Life Decks::Chinese`
+→ gitignored `dist/*.apkg`, **re-opened and verified** to carry the Chinese
+note type; hard-fails otherwise — see ADR 009) → `4.` commit → `5.` push
 main → `6.` `gh release create --target main` (tag points at the pushed
 commit) → fetch the remote tag. The apkg ships as a Release asset, never in
 the repo. Do not skip, reorder, or substitute steps.
@@ -129,7 +130,8 @@ sense-wrapper selectors, add the fixture first, then the CSS rule, then the
 `Card 1 - Back.template.anki` (hero, Pinyin tones, audio, lightbox) ·
 `Card 1 - Style.css` (themes, layout, tones §9, compactor §6b, truncator §6c) ·
 `fetch_anki_fields.py` · `bootstrap_chinese_model.py` ·
-`set_field_descriptions.py` · `sync_to_anki.py` · `release_apkg.py` ·
-`verify` · `finish.sh` · `tests/` (compactor + templates + front_modes +
-mature_content + pinyin_tones + layout + yukei + back_more) · `docs/adr/` ·
+`set_field_descriptions.py` · `seed_sample_cards.py` · `sync_to_anki.py` ·
+`build_apkg.py` · `verify` · `finish.sh` · `tests/` (compactor + templates +
+front_modes + mature_content + pinyin_tones + layout + yukei + back_more +
+apkg) · `docs/adr/` ·
 `chat_history/` · `dist/` + `backups/` (gitignored).

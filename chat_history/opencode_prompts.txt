@@ -8,3 +8,7 @@ finanly add it to my local anki
 ---
 
 change it to Deck: `My Life Decks::Chinese
+
+---
+
+create a new template (with a new folder in /home/mohamed/Desktop/Github), a new gh repo... etc — port the Japanese note type to Simplified Chinese; deck My Life Decks::Chinese

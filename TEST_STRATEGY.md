@@ -39,6 +39,7 @@ run `./verify`; CI re-runs `./verify` after every push.
 | Stdlib-only sync, microsecond backups | `tests/test_templates.py` §9 |
 | Content-driven height, no h-overflow, Pinyin stacked **under** the headword and inside its cell, type hierarchy, 3-line clamp + one-way expand, listening target size, context grid, More collapsed by default, footer containment | `tests/test_layout.py` — headless Chrome on the **real** stylesheet; skipped gracefully when Chrome is absent |
 | Back More lazy-load (template stays inert until first open, stamped once) + prune shrinks the live DOM | `tests/test_back_more.py` — extracts the real `toggleMore` / `initSecondarySection` / `pruneCompactedGlossary` and runs them in headless Chrome (skipped gracefully without Chrome) |
+| Release asset carries OUR note type, deck, and every note; the gate can fail | `tests/test_apkg.py` — builds a package from synthetic data and re-opens it; also asserts `verify_apkg` **rejects** a wrong model name / wrong note count and says why (ADR 009) |
 | Clean-environment pass, no forgotten files/deps | CI (`.github/workflows/verify.yml`) runs `./verify` |
 | Every UI element collapses when its field is empty | `tests/test_templates.py` §10 — conditional-enclosure parser over Front/Back, `:has()` shell-guard checks, JS self-removal checks |
 
@@ -81,3 +82,5 @@ scaffolding that the Japanese repo already had:
 - `test_layout.py`: headless Chrome if present, else skip (pass).
 - `test_back_more.py`: headless Chrome if present, else skip (pass).
 - `test_yukei.py`: stdlib only; headless Chrome optional for browser probes.
+- `test_apkg.py`: stdlib only (no Anki needed — exercises `build_apkg.py`'s
+  pure parts with synthetic data).

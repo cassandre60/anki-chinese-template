@@ -118,9 +118,11 @@ off-screen context to be solvable is a bad mine and should be re-mined.
   falls back to sentence); extensible for future behavior-related tags
   without card redesign.
 - Tooling: `sync_to_anki.py` pushes Front/Back/CSS with a pre-sync snapshot
-  to `backups/<timestamp>/`; `release_apkg.py` exports deck
-  `My Life Decks::Chinese` via `exportPackage`; `finish.sh` runs tests →
-  sync → export → commit → push → release.
+  to `backups/<timestamp>/`; `build_apkg.py` builds `dist/*.apkg` from deck
+  `My Life Decks::Chinese` and **verifies the written file carries the right
+  note type** before anything is published; `finish.sh` runs tests → sync →
+  build → commit → push → release. The apkg is assembled in-repo because
+  Anki-Connect's `exportPackage` is broken on Anki 26.x (ADR 009).
 
 ## UX requirements
 

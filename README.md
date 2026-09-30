@@ -159,7 +159,7 @@ only):
 git clone https://github.com/mansourvery-hub/anki-chinese-template.git
 cd anki-chinese-template
 python3 sync_to_anki.py    # snapshots live state to backups/, then pushes Front/Back/CSS
-python3 release_apkg.py    # exports sample deck to dist/*.apkg
+python3 build_apkg.py       # builds + verifies dist/*.apkg from the deck
 ```
 
 The note type and deck must exist first. One-shot, create-only:
@@ -167,7 +167,22 @@ The note type and deck must exist first. One-shot, create-only:
 ```bash
 python3 bootstrap_chinese_model.py   # creates the model + "My Life Decks::Chinese"
 python3 set_field_descriptions.py    # idempotent: writes the Fields-dialog text
+python3 seed_sample_cards.py         # 3 sample notes (see below)
 ```
+
+The deck ships 3 sample notes, tagged `anki-chinese-template-sample`. They
+exist because Anki's exporter degrades to the Default deck when the target
+deck is empty, and because a fresh install should be a smoke test of the
+front modes, the compactor, Pinyin tones and the listening front. Delete
+them any time — the note type and deck survive.
+
+> **`build_apkg.py` does not use Anki's exporter.** The installed
+> Anki-Connect is built for Anki 25.x and runs on Anki 26.09.3, where its
+> `exportPackage` silently returns success while exporting the **Default**
+> deck. `build_apkg.py` therefore writes the package itself and then
+> re-opens it to assert the note type, deck, and note count — a mismatch
+> aborts `finish.sh` before anything is published. See
+> [ADR 009](docs/adr/009-build-apkg-in-repo.md).
 
 **Option 3 — Manual:** paste `Card 1 - Front.template.anki`,
 `Card 1 - Back.template.anki`, and `Card 1 - Style.css` into the card template
@@ -185,7 +200,8 @@ editor (**Tools → Manage Note Types → Cards**).
 ├── bootstrap_chinese_model.py     # One-shot: create the note type + deck (refuses to re-run)
 ├── set_field_descriptions.py      # Idempotent: writes the field descriptions
 ├── sync_to_anki.py                # Push templates/CSS to Anki (pre-sync backup)
-├── release_apkg.py                # Export sample deck to dist/*.apkg
+├── build_apkg.py                  # Build + verify dist/*.apkg (see ADR 009)
+├── seed_sample_cards.py           # One-shot: 3 sample notes so the deck exports
 ├── verify                         # Local quality gate (tests only, no side effects)
 ├── finish.sh                      # One command: verify + sync + export + commit + push + release
 ├── PRODUCT.md / MVP.md            # Product intent / current scope
@@ -212,8 +228,8 @@ run one command:
 # --local: sync + export + commit only · --minor: bump v0.x.0 · --prompt "text": archive prompt
 ```
 
-This runs tests, syncs to Anki, exports the apkg, commits, pushes, and
-publishes a tagged release.
+This runs tests, syncs to Anki, builds and **verifies** the apkg, commits,
+pushes, and publishes a tagged release.
 
 `tests/` covers the compactor selectors and their JS mirror, template
 invariants (reading ban on the front, audio/lightbox semantics, balanced
