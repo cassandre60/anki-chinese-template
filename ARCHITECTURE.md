@@ -148,7 +148,8 @@ output  <span class="tone-N">zhōng</span> <span class="tone-2">guó</span>
 
 Invariants: only `.pinyin-display` / `.sentence-pinyin` are touched; a
 field that already contains element children is left **byte-identical**
-(mined markup is never rewritten); `data-tones-applied` makes a second
+(mined markup is never rewritten) — except the single `{{edit:}}`
+wrapper (`[data-EFDRCfield]`), whose text is toned in place; `data-tones-applied` makes a second
 pass a no-op under WebView DOM re-use; the original text is preserved
 inside each span, so only wrapping happens. §9 owns the palette and the
 `P` hide rule.

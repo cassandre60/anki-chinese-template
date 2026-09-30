@@ -173,6 +173,33 @@ def main():
               r.get("classes") == ["tone-1:tīng", "tone-1:yīn", "tone-4:yuè"],
               str(r.get("classes")))
 
+    # --- 7. {{edit:}} wrapper (single EFDRC div): tone the text inside it ---
+    r = render(fn, '<div data-EFDRCfield="UGlueWlu" class="EFDRC-outline EFDRC-ctrl ">zhōng guó</div>')
+    if r:
+        check("edit wrapper: tone 1 then tone 2",
+              r.get("classes") == ["tone-1:zhōng", "tone-2:guó"], str(r.get("classes")))
+        check("edit wrapper: spacing preserved",
+              r.get("text") == "zhōng guó", repr(r.get("text")))
+        check("edit wrapper: marked applied", r.get("applied") is True)
+        check("edit wrapper: second pass is a no-op",
+              r.get("classesAfterSecond") == r.get("classes"), str(r.get("classesAfterSecond")))
+    r = render(fn, '<div data-EFDRCfield="U2VudGVuY2UgUGlueWlu" class="EFDRC-outline EFDRC-ctrl ">tīng yīn yuè</div>',
+               wrap_class="sentence-pinyin")
+    if r:
+        check("edit wrapper sentence: tone 1, 1, 4",
+              r.get("classes") == ["tone-1:tīng", "tone-1:yīn", "tone-4:yuè"],
+              str(r.get("classes")))
+
+    # --- 8. No over-descend: already-toned or non-EFDRC markup stays put ---
+    r = render(fn, '<div data-EFDRCfield="eXhk"><span class="tone-1">zhōng</span></div>')
+    if r:
+        check("edit wrapper already toned: left alone",
+              r.get("classes") == ["tone-1:zhōng"], str(r.get("classes")))
+        check("edit wrapper already toned: not re-marked", r.get("applied") is not True)
+    r = render(fn, '<div class="other">zhōng guó</div>')
+    if r:
+        check("non-EFDRC wrapper: left untouched", r.get("classes") == [], str(r.get("classes")))
+
     print()
     print(f"{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
