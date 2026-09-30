@@ -103,7 +103,7 @@ Single quiet column with typography-driven hierarchy:
 ```text
 card-container
   ├── .scenic-band (photo-derived when Picture exists; aria-hidden
-  │    ink-wash mountain fallback otherwise; click/Enter opens the lightbox)
+  │    ink-wash pagoda fallback otherwise; click/Enter opens the lightbox)
   ├── .hero-header (3-col grid: left meta | centered word | right meta;
   │    stacked word-over-sides on phones)
   │    ├── .hero-side-left (freq visualizer + 词语 audio)

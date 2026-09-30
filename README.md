@@ -102,7 +102,7 @@ dead/duplicate view so exactly one listening sound button is ever visible.
 Typography does the work — no dashboard chrome:
 
 1. **Scenic band** — the card's `Picture` rendered as a compact CSS-treated
-   photo, or an animated ink-wash mountain fallback when empty. Photo cards
+   photo, or an animated ink-wash pagoda fallback when empty. Photo cards
    open the full-quality original in the lightbox.
 2. **Target + Pinyin** — the headword is the hero element, with its Pinyin
    line directly beneath it. Tone colours come from `applyPinyinTones()`,

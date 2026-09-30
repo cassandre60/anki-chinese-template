@@ -91,7 +91,7 @@ off-screen context to be solvable is a bad mine and should be re-mined.
   on the front. The sentence front is the universal fallback for every
   failure path.
 - Back hierarchy: a compact scenic band (the card's `Picture` when
-  present, otherwise a decorative ink-wash mountain fallback), then the
+  present, otherwise a decorative ink-wash pagoda fallback), then the
   word target with its Pinyin line (four-tone coloured), 5-star frequency
   visualizer, compacted primary definition (§6b), sentence context with an
   optional sentence-Pinyin line, native circular audio (`例句`/`词语`),
