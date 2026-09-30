@@ -121,7 +121,7 @@ fi
 echo "==> [1/6] Syncing templates to Anki (Anki-Connect)"
 python3 sync_to_anki.py
 
-echo "==> [2/6] Building + verifying dist/*.apkg"
+echo "==> [2/6] Exporting + verifying dist/*.apkg"
 python3 export_apkg.py
 
 echo "==> [3/6] Committing changes"
