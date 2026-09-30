@@ -1,0 +1,1857 @@
+/**
+ * ==============================================================================
+ * Chinese Note Type — Minimal Chinese Reading Interface
+ * (Ink Night Dark / Rice Paper Light)
+ *
+ * Source & documentation: https://github.com/mansourvery-hub/anki-chinese-template
+ * Version: v0.1.0 — auto-bumped by finish.sh; matches the GitHub release tag
+ *
+ * Ported from anki-japanese-template. Language deltas vs. the Japanese
+ * original: Pinyin replaces furigana (separate field + tone colors, no
+ * ruby), Pitch Accent is gone, the compactor targets Chinese dictionary
+ * markup, and every UI string is Chinese.
+ *
+ * Front = pure retrieval surface (sentence / word / audio only).
+ * Back = strong hierarchy: target → Pinyin → meaning → context →
+ * secondary (collapsed behind "详情 ▾"). Anki is the SRS; this
+ * template is presentation only — every visible element must justify
+ * its screen space.
+ *
+ * Audio: the circular ring is a playback indicator (a decorative
+ * play-pulse), not true progress — native Anki/AnkiDroid audio
+ * delegation is the authority (ADR 003). R shortcut is Anki-owned.
+ * :has() is intentional architecture for empty-shell collapse.
+ *
+ * Optimized for Arch Linux Desktop (Anki Qt6) and Samsung Galaxy A50
+ * (AnkiDroid): cards size to their content; fluid clamp() tokens,
+ * container queries with media-query fallback.
+ * ==============================================================================
+ */
+
+/* ==============================================================================
+   1. COLOR SYSTEM & CSS VARIABLES
+   ============================================================================== */
+:root {
+  /* --- INK NIGHT DARK (Default) --- */
+  --bg-color: #0d1117;
+  --card-bg: #151b28;
+  --card-bg-elevated: #1a2233;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --text-primary: #e8edf5;
+  --text-secondary: #8b99b0;
+  --text-muted: #5a687d;
+  
+  --accent-color: #e07a5f;
+  --accent-light: rgba(224, 122, 95, 0.10);
+  --accent-soft: rgba(224, 122, 95, 0.20);
+  --accent-glow: 0 0 20px rgba(224, 122, 95, 0.25);
+
+  /* Frequency Tier Colors */
+  --freq-very-common: #10b981;
+  --freq-common: #22c55e;
+  --freq-medium: #eab308;
+  --freq-uncommon: #f97316;
+  --freq-rare: #ef4444;
+
+  /* Mandarin tone colors (Pinyin only — never the Hanzi, so the target
+     word keeps the single accent color and the reading stays readable).
+     tone-0 = neutral (no diacritic), 1-4 = the four contour tones. */
+  --tone-1: #e6a2c4;
+  --tone-2: #7fb3e8;
+  --tone-3: #8ed3a3;
+  --tone-4: #e0a86a;
+  --tone-0: var(--text-secondary);
+
+  /* Warm accent: subtle seasonal warmth for decorative elements */
+  --warm-accent: rgba(255, 183, 120, 0.06);
+  --warm-accent-border: rgba(255, 183, 120, 0.08);
+
+  --shadow-premium: 0 8px 32px -6px rgba(0, 0, 0, 0.5),
+                    0 2px 8px -2px rgba(0, 0, 0, 0.25);
+  --shadow-soft: 0 2px 12px -4px rgba(0, 0, 0, 0.3);
+  --border-radius-lg: 16px;
+  --border-radius-md: 10px;
+  --border-radius-sm: 6px;
+
+  /* Spacing Tokens - Fluid viewport-based (tightened density pass:
+     hero-header single row saves one full-width row, so section gaps
+     can stay compact without feeling cramped) */
+  --gap-section: clamp(8px, 1.2vh, 14px);
+  --gap-block: clamp(6px, 1.2vmin, 12px);
+  --block-pad-y: clamp(2px, 0.4vmin, 6px);
+  --block-pad-x: clamp(10px, 1.8vmin, 18px);
+  --container-pad-y: clamp(12px, 2vh, 24px);
+  --container-pad-x: clamp(16px, 2.5vw, 36px);
+
+  /* Furigana clearance: rt height (0.55em of parent font) + 2px hover gap.
+     em-based so it scales with font size across viewports. Chinese has no
+     ruby, so this is only the vertical breathing room above a text block
+     (definition/sentence) — the name is kept because the §6c truncator
+     math (max-height = headroom + line) and the tests reference it. */
+  --furigana-headroom: calc(0.55em + 2px);
+  
+  /* Fonts: Source Han Serif / Noto Serif SC for Hanzi (serif suits the
+     editorial reading feel); Pinyin uses a Latin face with real tone-mark
+     coverage so ǚ/ǜ never falls back to tofu. */
+  --font-chinese-serif: "Source Han Serif SC", "Noto Serif CJK SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-chinese-sans: "Source Han Sans SC", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-pinyin: "Inter", "Noto Sans", "DejaVu Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-interface: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  --max-content-width: 1360px;
+
+  /* Decorative: separator motif (seigaiha-inspired wave) */
+  --separator-color: rgba(255, 255, 255, 0.05);
+  --separator-accent: rgba(224, 122, 95, 0.20);
+
+  /* Scenic Band Tokens — Dark / Ink Night defaults */
+  --scenic-sky: linear-gradient(180deg,#171a33 0%,#23274a 42%,#33284f 72%,#402b46 100%);
+  --scenic-peak: #100e1c;
+  --scenic-ridge: #d8d3e8;
+  --scenic-cloud: #2c2f52;
+  --scenic-star-op: .8;
+  --scenic-band-h: clamp(44px, 12.5vw, 58px);
+  --scenic-blur: 16px;
+  --scenic-sat: 0.8;
+  --scenic-tint: 0.25;
+  --scenic-wash: 0.25;
+}
+
+/* --- RICE PAPER LIGHT THEME --- */
+.card:not(.nightMode):not(.night_mode) {
+  --bg-color: #faf8f5;
+  --card-bg: #ffffff;
+  --card-bg-elevated: #fefefe;
+  --card-border: rgba(0, 0, 0, 0.06);
+  --text-primary: #1a1c20;
+  --text-secondary: #515a6b;
+  --text-muted: #8a909d;
+  
+  --accent-color: #b84a39;
+  --accent-light: rgba(184, 74, 57, 0.08);
+  --accent-soft: rgba(184, 74, 57, 0.16);
+  --accent-glow: 0 0 20px rgba(184, 74, 57, 0.20);
+
+  --freq-very-common: #047857;
+  --freq-common: #166534;
+  --freq-medium: #854d0e;
+  --freq-uncommon: #9a3412;
+  --freq-rare: #b91c1c;
+
+  /* Tone colors, light theme (Rice Paper): darker steps for contrast
+     on the pale card background. */
+  --tone-1: #a4346d;
+  --tone-2: #1f5fa8;
+  --tone-3: #237a4c;
+  --tone-4: #9a5a13;
+  --tone-0: var(--text-secondary);
+
+  --warm-accent: rgba(184, 74, 57, 0.04);
+  --warm-accent-border: rgba(184, 74, 57, 0.08);
+
+  --shadow-premium: 0 4px 20px rgba(0, 0, 0, 0.06),
+                    0 1px 4px rgba(0, 0, 0, 0.04);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  --separator-color: rgba(0, 0, 0, 0.04);
+  --separator-accent: rgba(184, 74, 57, 0.18);
+
+  /* Scenic Band Tokens — Rice Paper light override */
+  --scenic-sky: linear-gradient(180deg,#f6c69b 0%,#f0a08a 42%,#d98a95 72%,#b8879c 100%);
+  --scenic-peak: #5b4a6b;
+  --scenic-ridge: #fbeadf;
+  --scenic-cloud: #fbe7d8;
+  --scenic-star-op: 0;
+}
+
+.card.nightMode,
+.card.night_mode {
+  --bg-color: #0d1117;
+  --card-bg: #151b28;
+  --card-bg-elevated: #1a2233;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --text-primary: #e8edf5;
+  --text-secondary: #8b99b0;
+  --text-muted: #5a687d;
+  --accent-color: #e07a5f;
+  --accent-light: rgba(224, 122, 95, 0.10);
+  --accent-soft: rgba(224, 122, 95, 0.20);
+  --warm-accent: rgba(255, 183, 120, 0.06);
+  --warm-accent-border: rgba(255, 183, 120, 0.08);
+  --separator-color: rgba(255, 255, 255, 0.05);
+  --separator-accent: rgba(224, 122, 95, 0.20);
+
+  /* Scenic Band (Yūkei) Tokens — Explicit dark theme */
+  --scenic-sky: linear-gradient(180deg,#171a33 0%,#23274a 42%,#33284f 72%,#402b46 100%);
+  --scenic-peak: #100e1c;
+  --scenic-ridge: #d8d3e8;
+  --scenic-cloud: #2c2f52;
+  --scenic-star-op: .8;
+}
+
+
+/* ==============================================================================
+   2. BASE CARD LAYOUT & CONTAINER
+   ============================================================================== */
+.card {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-interface);
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  container-type: inline-size;
+  container-name: anki-card;
+}
+
+.card-container {
+  width: 100%;
+  max-width: min(96vw, var(--max-content-width, 1360px));
+  margin: 0 auto;
+  padding: var(--container-pad-y) var(--container-pad-x);
+  box-sizing: border-box;
+}
+
+.back-card .card-container {
+  background: rgba(19, 24, 34, 0.78);
+  /* 8px, not 18px: fullscreen blur is the top repaint cost on scroll;
+     the frosted look survives, the offscreen surface gets ~2x cheaper. */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-premium);
+  margin-top: clamp(4px, 0.8vh, 10px);
+  margin-bottom: clamp(4px, 0.8vh, 10px);
+  overflow: hidden; /* clips .scenic-band's square corners to the card's
+                        existing border-radius; nothing else in this rule
+                        currently relies on overflow being visible —
+                        verify the lightbox (appended to document.body,
+                        should be unaffected) and any focus outline. */
+}
+
+.card:not(.nightMode):not(.night_mode) .back-card .card-container {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+}
+
+
+/* ==============================================================================
+   3. SECONDARY-INFO TOGGLE ("More ▾")
+   ============================================================================== */
+/* "More ▾" — a quiet, elegant editorial disclosure */
+.more-toggle {
+  font-family: var(--font-interface);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--accent-light);
+  border: 1px solid var(--card-border);
+  padding: 6px 16px;
+  margin: clamp(8px, 1.4vh, 16px) auto 4px auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  border-radius: 9999px;
+  transition: color 0.2s ease, background-color 0.2s ease,
+              border-color 0.2s ease, transform 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.more-toggle:hover,
+.more-toggle:focus-visible {
+  color: var(--accent-color);
+  background-color: var(--accent-soft);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.card:not(.nightMode):not(.night_mode) .more-toggle:hover,
+.card:not(.nightMode):not(.night_mode) .more-toggle:focus-visible {
+  background-color: var(--accent-soft);
+}
+
+.more-toggle:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 1px;
+}
+
+.more-toggle .more-caret {
+  display: inline-block;
+  font-size: 0.7rem;
+  margin-left: 2px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.more-toggle.is-open .more-caret {
+  transform: rotate(180deg);
+}
+
+.more-section {
+  margin-top: 8px;
+  width: 100%;
+}
+
+
+/* ==============================================================================
+   4. CONTEXT GRID (sentence; legacy picture rules retained per ADR 006)
+   ============================================================================== */
+.context-grid {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.5vh, 18px);
+  align-items: center;
+  width: 100%;
+  margin-top: var(--gap-section);
+}
+
+/* Empty-shell guard (QUALITY.md): collapse when neither sentence nor picture exists */
+.context-grid:not(:has(.sentence-chinese, .context-only, .context-picture)) {
+  display: none;
+}
+
+.context-main {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.context-main:not(:has(.sentence-chinese, .context-only)) {
+  display: none;
+}
+
+.context-picture {
+  width: 100%;
+  text-align: center;
+}
+
+@container anki-card (min-width: 580px) {
+  /* Editorial balance: sentence left/center, picture right, both
+     top-anchored — the picture stays just below the definition no matter
+     how long the sentence grows (never dragged down by it). */
+  .context-grid:has(.context-picture) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: clamp(20px, 3.5vw, 48px);
+  }
+
+  .context-grid:has(.context-picture) .context-main {
+    flex: 1 1 54%;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .context-grid:has(.context-picture) .sentence-chinese {
+    text-align: center;
+  }
+
+  .context-picture {
+    flex: 0 1 46%;
+    width: auto;
+    max-width: min(46vw, 640px);
+  }
+
+  .small-audio-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@container anki-card (max-width: 599px) {
+  /* Narrow reviewer pane on a wide viewport: same stacking as phones.
+     The viewport-media twin in §13 stays as the fallback for WebViews
+     without container-query support. */
+  .hero-header {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "word word"
+      "left right";
+    row-gap: 1px;
+    column-gap: 8px;
+  }
+}
+
+/* Portability fallback for WebViews without container-query support */
+@media (min-width: 580px) {
+  .context-grid:has(.context-picture) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: clamp(20px, 3.5vw, 48px);
+  }
+
+  .context-grid:has(.context-picture) .context-main {
+    flex: 1 1 54%;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .context-grid:has(.context-picture) .sentence-chinese {
+    text-align: center;
+  }
+
+  .context-picture {
+    flex: 0 1 46%;
+    width: auto;
+    max-width: min(46vw, 640px);
+  }
+}
+
+@media (min-width: 768px) {
+  .context-grid:has(.context-picture) {
+    gap: clamp(24px, 3.5vw, 48px);
+  }
+}
+
+
+
+
+/* ==============================================================================
+    5. FRONT CARD TYPOGRAPHY - Fluid Sizing
+       One base clamp for all screens (vmin respects height too), plus a
+       smaller override in the mobile block (section 13) for phones.
+    ============================================================================== */
+.sentence-display,
+.front-word-display {
+  font-family: var(--font-chinese-serif);
+  /* Refined, authoritative scale: dominant without visual shouting */
+  font-size: clamp(1.8rem, 4.2vmin + 0.75rem, 4.2rem);
+  line-height: 1.4;
+  padding: 12px 16px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+  letter-spacing: 0.02em;
+}
+
+/* Front: Yomitan wraps the target word in <b> even for word-only fronts
+   (Sentence field = "<b>word</b>"). Force it light — color + underline
+   still mark it without the heavy stroke. */
+.sentence-display b,
+.sentence-display strong,
+.front-word-display b,
+.front-word-display strong {
+  color: var(--accent-color);
+  font-weight: 400;
+  /* Brushstroke-inspired underline: a warm gradient that tapers like ink */
+  background: linear-gradient(transparent 76%, var(--accent-soft) 76%, var(--accent-light) 94%);
+  padding: 0 5px;
+  border-radius: 3px;
+}
+
+/* Back sentence target matches surrounding weight — color + underline mark it. */
+.sentence-chinese b,
+.sentence-chinese strong {
+  color: var(--accent-color);
+  font-weight: 400;
+  background: linear-gradient(transparent 76%, var(--accent-soft) 76%, var(--accent-light) 94%);
+  padding: 0 5px;
+  border-radius: 3px;
+}
+
+/* Back headword: never bold, even if Yomitan injects <b>/<strong>. */
+.word-display b,
+.word-display strong {
+  font-weight: 400;
+}
+
+/* 5b. MATURE-CARD WORD MODE
+   Used when card interval >= LONG_INTERVAL_DAYS.
+   Swaps the sentence display for the bare expression. */
+.front-word-display {
+  display: none;
+  font-weight: 400;
+}
+
+.card-wrapper.word-mode .sentence-display {
+  display: none;
+}
+
+.card-wrapper.word-mode .front-word-display {
+  display: block;
+}
+
+
+/* ==============================================================================
+    6. BACK CARD HIERARCHY — target, reading, meaning (Fluid Typography)
+    ============================================================================== */
+/* Target + reading form ONE conceptual unit, centered, the hero element.
+   The word display now occupies more visual space with generous sizing
+   and a subtle warm glow backdrop. */
+
+.hero-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas: "left word right";
+  align-items: center;
+  column-gap: clamp(8px, 1.5vw, 18px);
+  row-gap: 2px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Empty-shell guard: collapse when neither word nor meta exists */
+.hero-header:not(:has(.word-display, .frequency-badge, .circular-audio-btn)) {
+  display: none;
+}
+
+.hero-word-wrap {
+  grid-area: word;
+  /* Column: the headword stacks over its Pinyin line as ONE centered
+     unit. Row direction would place them side by side. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  position: relative;
+  min-width: 0;
+}
+
+/* Side cells hug the word (end/start) so buttons sit beside the
+   expression, not at the far card edges. They stay in the grid even
+   when empty — that is what keeps the word truly centered. Zero
+   margin/padding here, so empty sides leave no chrome behind. */
+.hero-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.hero-side-left {
+  grid-area: left;
+  justify-self: end;
+  justify-content: flex-end;
+}
+
+.hero-side-right {
+  grid-area: right;
+  justify-self: start;
+  justify-content: flex-start;
+}
+
+.hero-side .audio-row {
+  margin: 0;
+}
+
+/* Headroom above the hero word: the Pinyin line sits here, so the word
+   needs no ruby clearance itself. em-based => scales continuously with
+   font size across all screen sizes. */
+.word-display {
+  font-family: var(--font-chinese-serif);
+  /* Hero target: unmistakably dominant, commanding, and present */
+  font-size: clamp(3.0rem, 5.2vw + 1.2rem, 5.2rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.06em;
+  /* 12px top padding, not the Japanese ruby headroom: this is exactly
+     what the scenic band's 12px of extra painted height tucks under
+     (§17), so the band still costs the hero zero flow height. */
+  padding-top: calc(var(--block-pad-y, 0px) + 12px);
+  padding-bottom: clamp(1px, 0.3vh, 4px);
+  margin: 0;
+  text-align: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* 5c. PINYIN LINE (hero reading)
+   One plain-text line directly under the headword. Tone colors come from
+   applyPinyinTones() in the back script (§9b owns the palette); this rule
+   only owns the box: size, rhythm, and the `P` hide toggle. Nothing here
+   changes layout when Pinyin is absent — the {{#Pinyin}} conditional in
+   the template means the element simply does not exist. */
+.pinyin-display {
+  font-family: var(--font-pinyin);
+  font-size: clamp(1.05rem, 1.5vw + 0.72rem, 1.7rem);
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* Sentence Pinyin: same treatment, one tier quieter — it supports the
+   sentence, it is not the answer. */
+.sentence-pinyin {
+  font-family: var(--font-pinyin);
+  font-size: clamp(0.95rem, 0.9vw + 0.7rem, 1.3rem);
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0.2em 0 0 0;
+  overflow-wrap: anywhere;
+}
+
+/* Frequency badge: 5-star scale & progress track */
+.frequency-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  background-color: var(--accent-light);
+  border: 1px solid var(--accent-soft);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  line-height: 1;
+  cursor: default;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.frequency-bar-track {
+  width: 32px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.card:not(.nightMode):not(.night_mode) .frequency-bar-track {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.frequency-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.frequency-stars {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+/* Frequency Tier Theming */
+.frequency-badge.freq-very-common {
+  color: var(--freq-very-common);
+  border-color: rgba(16, 185, 129, 0.3);
+  background-color: rgba(16, 185, 129, 0.1);
+}
+.frequency-badge.freq-very-common .frequency-bar-fill {
+  background-color: var(--freq-very-common);
+}
+
+.frequency-badge.freq-common {
+  color: var(--freq-common);
+  border-color: rgba(34, 197, 94, 0.3);
+  background-color: rgba(34, 197, 94, 0.1);
+}
+.frequency-badge.freq-common .frequency-bar-fill {
+  background-color: var(--freq-common);
+}
+
+.frequency-badge.freq-medium {
+  color: var(--freq-medium);
+  border-color: rgba(234, 179, 8, 0.3);
+  background-color: rgba(234, 179, 8, 0.1);
+}
+.frequency-badge.freq-medium .frequency-bar-fill {
+  background-color: var(--freq-medium);
+}
+
+.frequency-badge.freq-uncommon {
+  color: var(--freq-uncommon);
+  border-color: rgba(249, 115, 22, 0.3);
+  background-color: rgba(249, 115, 22, 0.1);
+}
+.frequency-badge.freq-uncommon .frequency-bar-fill {
+  background-color: var(--freq-uncommon);
+}
+
+.frequency-badge.freq-rare {
+  color: var(--freq-rare);
+  border-color: rgba(239, 68, 68, 0.3);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+.frequency-badge.freq-rare .frequency-bar-fill {
+  background-color: var(--freq-rare);
+}
+
+/* --- Decorative separator: seigaiha-inspired arc motif ---
+   A tiny wave pattern between the hero word/meaning and the context area.
+   Pure CSS, no images. Adds visual rhythm without distraction. */
+.card-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: clamp(4px, 0.8vh, 8px) auto;
+  width: 100%;
+  max-width: 280px;
+  height: 12px;
+  opacity: 0.7;
+}
+
+.card-separator::before,
+.card-separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to var(--sep-dir, right),
+    transparent, var(--separator-color) 40%, var(--separator-accent) 100%);
+}
+
+.card-separator::after {
+  --sep-dir: left;
+}
+
+.card-separator .sep-motif {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--separator-accent);
+  margin: 0 10px;
+  position: relative;
+}
+
+/* Small decorative arcs flanking the dot — evoke seigaiha wave crests */
+.card-separator .sep-motif::before,
+.card-separator .sep-motif::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--separator-color);
+  transform: translateY(-50%);
+}
+
+.card-separator .sep-motif::before {
+  right: 100%;
+  margin-right: 4px;
+}
+
+.card-separator .sep-motif::after {
+  left: 100%;
+  margin-left: 4px;
+}
+
+/* Audio row: quiet affordances under the target & meaning. */
+.audio-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: clamp(10px, 1.6vh, 18px) auto 6px auto;
+}
+
+/* Empty-shell guard (QUALITY.md "Empty-field collapse"): .audio-row
+   renders unconditionally while its buttons are conditional — collapse
+   the shell when every child is absent so no margin/gap survives an
+   empty field. */
+.audio-row:not(:has(.circular-audio-btn)) {
+  display: none;
+}
+
+.definition-box {
+  /* Editorial typography: no harsh dividing lines, optimal reading measure */
+  font-family: var(--font-interface);
+  font-size: clamp(1.04rem, 0.45vw + 0.84rem, 1.38rem);
+  line-height: calc(var(--furigana-headroom) + 1em + 0.15em);
+  color: var(--text-primary);
+  max-width: 68ch;
+  margin: clamp(4px, 0.8vh, 10px) auto 0 auto;
+  padding-top: var(--furigana-headroom);
+  width: 100%;
+  text-align: center;
+}
+
+
+/* ==============================================================================
+   6b. DEFINITION COMPACTOR (scope: .primary-definition ONLY)
+   ==============================================================================
+   Yomitan mines the full Definition field as a .yomitan-glossary containing
+   one <li data-dictionary="..."> per dictionary plus embedded <style> blocks.
+   That is far too verbose for the main card. Rules below collapse it to:
+     - 1 dictionary entry (the first)
+     - at most 2 senses within it
+     - no appendix blocks (forms / attribution / frequency notes)
+   Dictionary-agnostic: matches structural attributes, never dictionary
+    names. Deliberately does NOT touch .extended-full (the full dictionary
+    definition inside the More section stays full) or any other field.
+
+   CHINESE PORT: the Japanese original also matched the structured-dictionary
+   sense wrappers (data-sc-name="語義G", data-sc-l3*, 補説G, 可能形, …).
+   Chinese dictionaries in Yomitan (CC-CEDICT and friends) emit no such
+   SC sense markup — their senses are plain <li> inside a glossary list —
+   so only the structural keeps below apply. The Japanese structural
+   selectors are deliberately absent: keeping them would be dead weight
+   that pretends to constrain markup this language never produces.
+
+   Every rule here is mirrored 1:1 by pruneCompactedGlossary() in the back
+   script (hidden nodes still cost parse + style + layout, so they are
+   removed rather than display:none'd). tests/test_compactor.py enforces
+   that the two stay in sync on fixtures. Do not edit one without the other.
+   ============================================================================== */
+
+/* --- Collapse all dictionary entries after the first --- */
+/* List markers: Yomitan emits <ol><li> per dictionary; suppress the "1."
+   numbering and the ol indent so the kept entry reads as plain text. */
+.primary-definition .yomitan-glossary > ol {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+/* Dictionary name labels and metadata <i>(...)</i> are noise. */
+.primary-definition i {
+  display: none;
+}
+.primary-definition .yomitan-glossary > ol > li ~ li {
+  display: none;
+}
+
+/* Some Chinese Yomitan dictionaries emit a <ul> per entry rather than <ol>. */
+.primary-definition .yomitan-glossary > ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+.primary-definition .yomitan-glossary > ul > li ~ li {
+  display: none;
+}
+
+/* --- Keep at most 2 senses per dictionary --- */
+/* Chinese senses are plain glosses, but dictionary authors wrap them
+   either directly in the content element or in a nested <ul>. Both
+   shapes appear in the wild (CC-CEDICT emits the flat one, structured
+   dictionaries the wrapped one), so both are constrained. The sibling
+   chain selects everything from the 3rd occurrence on. */
+.primary-definition [data-sc-content="glossary"] > li ~ li ~ li,
+.primary-definition [data-sc-content="glossary"] > ul > li ~ li ~ li {
+  display: none;
+}
+
+/* --- Hide sense appendices (any dictionary, structural match) --- */
+/* Forms and attribution lines carry no retrieval value on the main card.
+   Matched at any depth and on the element itself, not on `li` only:
+   dictionaries disagree on whether the attribute sits on the <li> or on
+   its wrapping <ul>. */
+.primary-definition [data-sc-content="forms"] {
+  display: none;
+}
+
+/* Hide attribution (JMdict | Tatoeba | CC-CEDICT) */
+.primary-definition div[data-sc-content="attribution"] {
+  display: none;
+}
+.primary-definition span[data-sc-content="attribution"] {
+  display: none;
+}
+
+/* Yomitan inline <style> blocks inside the glossary leak their own rules
+   (list display modes, per-dictionary colors). Neutralize styling that
+   fights the card theme; keep size/margins untouched so SC layouts hold.
+   background-image is killed outright: hide-only compactor must never let
+   mined CSS exfiltrate via url() or overlay UI. */
+.primary-definition .yomitan-glossary * {
+  background-image: none !important;
+}
+.primary-definition .yomitan-glossary ul[data-sc-content="glossary"] {
+  display: inline;
+  list-style: none;
+  padding-left: 0;
+}
+.primary-definition .yomitan-glossary ul[data-sc-content="glossary"] > li {
+  display: inline;
+}
+.primary-definition .yomitan-glossary ul[data-sc-content="glossary"] > li:not(:first-child)::before {
+  content: " | ";
+  white-space: pre-wrap;
+  display: inline;
+  color: var(--text-muted);
+}
+
+/* ==============================================================================
+    6c. DEFINITION TRUNCATOR & EXPANDABLE UI
+    ==============================================================================
+    Primary definition shows THREE lines by default (line-height computed
+    from --furigana-headroom + 1em + 0.05em). Longer content clips and
+    gets a progressive fade + one small ▼ chevron (no text label). Click,
+    tap, Enter or Space expands to the full text and STAYS expanded
+    (one-way: a second click never re-collapses it).
+
+    Mechanics are deliberately boring so they hold for ANY nested Yomitan
+    markup on every client (Qt6 WebEngine + AnkiDroid WebKit):
+      - display:block + max-height + overflow:hidden clips everything.
+        (-webkit-line-clamp was tried and reverted: it needs -webkit-box,
+        miscounts nested block children, and silently kept .is-expanded
+        clamped because the clamp was never unset on expand.)
+      - .is-truncated is added by JS only when content truly overflows
+        (scrollHeight > clientHeight), so short glosses never show a
+        misleading fade/chevron. Without JS the box is just a plain full
+        definition — never broken, never misleading.
+    ============================================================================== */
+
+/* Collapsed cap = 3 lines. Line-height is the furigana-headroom formula
+   from .definition-box; max-height applies to the CONTENT box (no
+   box-sizing override here), so the top headroom padding sits outside
+   the cap — no extra term needed. */
+.definition-box.primary-definition {
+  position: relative;
+  overflow: hidden;
+  max-height: calc((var(--furigana-headroom) + 1em + 0.05em) * 3);
+  cursor: default;
+}
+
+/* Expanded: cap removed entirely, stays expanded (no re-collapse) */
+.definition-box.primary-definition.is-expanded {
+  max-height: none;
+  cursor: default;
+}
+
+/* Overflow confirmed by JS: clickable affordance */
+.definition-box.primary-definition.is-truncated {
+  cursor: pointer;
+}
+
+/* Progressive fade: line bottom dissolves into the card => "there's more" */
+.definition-box.primary-definition.is-truncated:not(.is-expanded)::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1.2em;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    var(--bg-color) 100%
+  );
+  pointer-events: none;
+}
+
+/* Collapsed indicator: one small chevron, no text */
+.definition-box.primary-definition.is-truncated:not(.is-expanded)::before {
+  content: "▼";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.definition-box.primary-definition.is-truncated:not(.is-expanded):hover::before,
+.definition-box.primary-definition.is-truncated:not(.is-expanded):focus-visible::before {
+  color: var(--accent-color);
+}
+
+/* ==============================================================================
+   7. CIRCULAR AUDIO BUTTON WITH SVG PROGRESS RING
+   ============================================================================== */
+/* Ring geometry: stroke-dasharray 226.19 (large, r=36) / 119.38 (small,
+   r=19) = 2πr. The same constants live in the SVG markup and the JS
+   resetAudioState fallbacks — update all three together if r changes. */
+.audio-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.circular-audio-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--accent-light);
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.2s ease,
+              background-color 0.2s ease,
+              box-shadow 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.small-audio-btn {
+  width: 36px;
+  height: 36px;
+}
+
+/* Hit-area expansion: visual size stays dense (36/32px) for PRODUCT density,
+   but the tappable region reaches 48px desktop / 44px mobile via an absolute
+   pseudo-element (no layout shift, no neighbor overlap — one button per row). */
+.circular-audio-btn::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
+/* Keyboard focus indicator (outline: none above only affects mouse clicks;
+   :focus-visible restores a compact accent ring for keyboard navigation) */
+.circular-audio-btn:focus-visible,
+.translation-box:focus-visible,
+.picture-container:focus-visible,
+.scenic-photo-trigger:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.large-audio-btn {
+  width: 84px;
+  height: 84px;
+  background-color: var(--card-bg-elevated);
+  box-shadow: var(--shadow-premium);
+}
+
+.circular-audio-btn:hover,
+.circular-audio-btn:active {
+  transform: scale(1.08);
+  border-color: var(--accent-color);
+  background-color: var(--accent-soft);
+  box-shadow: var(--accent-glow);
+}
+
+.circular-audio-btn.is-playing {
+  border-color: var(--accent-color);
+  box-shadow: var(--accent-glow);
+  background-color: var(--accent-soft);
+}
+
+.audio-progress-ring {
+  /* Playback indicator: a decorative play-pulse, not true progress.
+     Native audio is the authority (ADR 003); this ring only signals that
+     a play was triggered and re-tap debounce is active. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.audio-progress-ring .ring-bg {
+  fill: none;
+  stroke: var(--accent-light);
+  stroke-width: 2px;
+}
+
+.audio-progress-ring .ring-fill {
+  fill: none;
+  stroke: var(--accent-color);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.08s linear;
+}
+
+.audio-btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.small-audio-btn .audio-btn-label {
+  font-family: var(--font-japanese-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.small-audio-btn:hover .audio-btn-label {
+  color: var(--accent-color);
+}
+
+.large-audio-btn .audio-btn-label {
+  font-family: var(--font-japanese-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.circular-audio-btn.is-playing .audio-btn-label {
+  color: var(--text-primary);
+}
+
+
+/* ==============================================================================
+    8. SENTENCE & TRANSLATION - Fluid Typography
+    ============================================================================== */
+/* Level 3 (context): the sentence supports the target; it reads as
+   context, not as the loudest element (that is the headword). */
+.sentence-chinese {
+  font-family: var(--font-chinese-serif);
+  /* Supporting context: distinctly smaller than the hero headword */
+  font-size: clamp(1.2rem, 1.5vw + 0.6rem, 1.85rem);
+  /* Hanzi are square and dense; a slightly tighter leading than the
+     Japanese original keeps the paragraph rhythm without crowding. */
+  line-height: 1.45;
+  margin-bottom: clamp(4px, 0.8vmin, 10px);
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.sentence-chinese,
+.sentence-chinese * {
+  text-align: center;
+}
+
+/* Secondary blocks inside the More section: quiet, no card-in-card. */
+.secondary-block {
+  font-size: clamp(0.98rem, 0.35vw + 0.78rem, 1.28rem);
+  line-height: 1.6;
+  color: var(--text-secondary);
+  text-align: left;
+  margin-top: 10px;
+  padding: clamp(6px, 1vh, 12px) var(--block-pad-x);
+  background: var(--warm-accent);
+  border-radius: var(--border-radius-sm);
+  border-left: 2px solid var(--separator-accent);
+}
+
+.translation-box {
+  background-color: var(--accent-light);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius-md);
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+              transform 0.15s ease;
+  width: 100%;
+  max-width: 68ch;
+  margin: 8px auto;
+  box-sizing: border-box;
+}
+
+.translation-box:hover {
+  background-color: var(--accent-soft);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.card:not(.nightMode):not(.night_mode) .translation-box {
+  background-color: var(--accent-light);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.card:not(.nightMode):not(.night_mode) .translation-box:hover {
+  background-color: var(--accent-soft);
+  border-color: var(--accent-color);
+}
+
+.translation-hint {
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  user-select: none;
+  text-align: center;
+}
+
+.translation-text {
+  display: none;
+  /* Lower emphasis tier: floor sits below the definition's floor
+     so revealed translations read as secondary. */
+  font-size: clamp(0.98rem, 0.35vw + 0.78rem, 1.28rem);
+  color: var(--text-secondary);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.translation-box.revealed .translation-text { display: block; }
+.translation-box.revealed .translation-hint { display: none; }
+
+/* Orphan translation (no Sentence): rendered statically, same tier. */
+.revealed-static.translation-text {
+  display: block;
+  font-size: clamp(0.98rem, 0.35vw + 0.78rem, 1.28rem);
+  color: var(--text-secondary);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.context-block {
+  margin-top: 8px;
+}
+
+.html-content {
+  /* Lower emphasis tier: notes/context are support material, quieter
+     than the definition (and floor-below it, unlike before). */
+  font-size: clamp(0.98rem, 0.35vw + 0.78rem, 1.28rem);
+  line-height: 1.6;
+}
+
+
+/* ==============================================================================
+   9. PINYIN TONES & READING ERGONOMICS
+   ==============================================================================
+   The Japanese original hid `ruby rt` until hover and reserved absolute
+   headroom for a zero-reflow reveal. Chinese has no ruby, so this section
+   is repurposed rather than deleted: the Pinyin line is always present
+   (it is the reading, the same information furigana carried), and the
+   only reveal mechanic left is the `P` hide toggle in 9b.
+
+   Tone spans are produced by applyPinyinTones() in the back script. They
+   are plain inline spans with no position/size of their own, so coloring
+   them can never reflow anything. */
+
+/* Neutral-tone fallback: a syllable whose tone could not be detected
+   (e.g. an erhua word like 儿, or a syllable that is only a tone mark)
+   stays in the reading's own color rather than inheriting a wrong hue. */
+.tone-0 {
+  color: var(--tone-0);
+}
+
+.tone-1 { color: var(--tone-1); }
+.tone-2 { color: var(--tone-2); }
+.tone-3 { color: var(--tone-3); }
+.tone-4 { color: var(--tone-4); }
+
+/* 9b. PINYIN VISIBILITY TOGGLE (back only; P toggles).
+   Hides both Pinyin lines (hero + sentence) so the card can be read as
+   Chinese-only. display:none, not opacity: the hidden line must stop
+   costing vertical space, since screen real estate is the scarce
+   resource on the phone. One-way class toggle, no reflow of the target. */
+.card-wrapper.pinyin-hidden .pinyin-display,
+.card-wrapper.pinyin-hidden .sentence-pinyin {
+  display: none;
+}
+
+
+/* ==============================================================================
+   10. MEDIA & LIGHTBOX MODAL
+   ============================================================================== */
+.picture-container img {
+  /* Block-level: kills the inline-baseline descender gap that left loose pixels.
+     Desktop cap is generous (44vh) so the parallel picture fills the row
+     height beside the sentence instead of leaving empty space; mobile
+     override (§13) stays compact for no-scroll. */
+  display: block;
+  margin-inline: auto;
+  max-width: 100%;
+  max-height: 44vh;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-premium);
+  cursor: zoom-in;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease;
+}
+
+.card:not(.nightMode):not(.night_mode) .picture-container img {
+  border-color: rgba(0, 0, 0, 0.07);
+  box-shadow: var(--shadow-soft);
+}
+
+.picture-container img:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-premium), var(--accent-glow);
+}
+
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.78);
+  z-index: 2000;
+  backdrop-filter: blur(14px) saturate(0.8);
+  -webkit-backdrop-filter: blur(14px) saturate(0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.expanded-img {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  max-width: 96vw;
+  max-height: 96vh;
+  z-index: 2001;
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.88);
+  animation: lightboxIn 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes lightboxIn {
+  from {
+    transform: translate(-50%, -50%) scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+
+/* ==============================================================================
+   11. FOOTER & SHORTCUT HINTS
+   ============================================================================== */
+.extended-def-wrapper {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--card-border);
+}
+
+.extended-def-header {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+.shortcut-hints {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: clamp(6px, 1vh, 12px) auto 4px auto;
+  padding: 6px 12px;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+  user-select: none;
+}
+
+.shortcut-hints:hover {
+  opacity: 0.95;
+}
+
+.shortcut-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.shortcut-item kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: var(--font-interface);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+  background-color: var(--card-bg-elevated);
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.card:not(.nightMode):not(.night_mode) .shortcut-item kbd {
+  background-color: #f0ede6;
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.source-footer {
+  text-align: center;
+  padding: 8px 0 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* Source lives inside .more-section (hidden by default, revealed via
+   詳細 ▾ / C like all secondary info): keep its quiet-caption type but
+   give it the same block rhythm as its siblings. */
+.more-section .source-footer {
+  margin-top: 10px;
+  padding-left: var(--block-pad-x);
+  padding-right: var(--block-pad-x);
+}
+
+
+/* ==============================================================================
+    12. LISTENING MODE FRONT
+    ============================================================================== */
+/* Listening cards (audio-only: no definitions, no frequency, has Sentence Audio).
+   The template only renders .listening-view on pure listening cards. */
+.listening-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Deliberate presence: enough height that the lone audio button reads
+      as THE card, not an accident */
+  min-height: 30vh;
+  padding: 16px;
+}
+
+.card-wrapper.listening-mode .listening-view {
+  display: flex;
+}
+
+/* Listening mode is exclusive with the sentence/word fronts. */
+.card-wrapper.listening-mode .sentence-display,
+.card-wrapper.listening-mode .front-word-display {
+  display: none;
+}
+
+.audio-btn-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Holds Anki's own replay link. Visually hidden but KEPT in layout:
+   display:none breaks programmatic .click() playback on some clients,
+   and the link must not live inside the <button> (invalid HTML that
+   Android WebView mishandles). */
+.raw-audio-source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* ==============================================================================
+    13. MOBILE SPECIFIC OPTIMIZATIONS (< 600px / Samsung Galaxy A50)
+    Density, hierarchy, the Pinyin lines, and JS interactions stay intact
+    on the narrow screen.
+    ============================================================================== */
+@media (max-width: 600px) {
+  .back-card .card-container {
+    margin: 0 auto;
+    padding: 8px 6px;
+    border-radius: var(--border-radius-md);
+    /* A50 fast-path: stacked layout hides the backdrop anyway; skip the
+       offscreen blur surface on the weakest GPU. */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .sentence-display,
+  .front-word-display {
+    font-size: clamp(1.1rem, 3.8vmin + 0.5rem, 1.85rem);
+    padding: 4px 6px;
+  }
+  .sentence-chinese {
+    font-size: clamp(1.1rem, 3.5vmin + 0.5rem, 1.85rem);
+  }
+  .word-display {
+    font-size: clamp(1.9rem, 4.5vmin + 1rem, 2.7rem);
+  }
+  .pinyin-display {
+    font-size: clamp(0.95rem, 1.4vw + 0.6rem, 1.3rem);
+  }
+  .sentence-pinyin {
+    font-size: clamp(0.85rem, 1vw + 0.6rem, 1.1rem);
+  }
+
+  /* Narrow phones: word on its own centered row, the two sides share
+     one tight row below it (left cell right-aligned, right cell
+     left-aligned, so the pair stays jointly centered). */
+  .hero-header {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "word word"
+      "left right";
+    row-gap: 1px;
+    column-gap: 8px;
+  }
+
+  .hero-side {
+    gap: 8px;
+  }
+
+  .frequency-badge {
+    padding: 2px 7px;
+    font-size: 0.74rem;
+    gap: 4px;
+  }
+
+  .frequency-bar-track {
+    width: 24px;
+  }
+
+  .frequency-stars {
+    font-size: 0.62rem;
+  }
+
+  .context-grid:has(.context-picture) {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .context-grid:has(.context-picture) .context-picture {
+    order: -1;
+  }
+
+  .picture-container img {
+    max-height: clamp(24vh, 22vmin, 32vh);
+    border-radius: var(--border-radius-sm);
+  }
+
+  .audio-row {
+    gap: 8px;
+  }
+
+  .small-audio-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .small-audio-btn .audio-btn-label {
+    font-size: 0.66rem;
+  }
+
+  .more-toggle {
+    font-size: 0.72rem;
+    padding: 5px 12px;
+    margin-top: 8px;
+  }
+
+  .card-separator {
+    max-width: 180px;
+    margin: 4px auto;
+  }
+
+  .secondary-block {
+    padding: 6px 10px;
+  }
+
+  /* No physical keyboard on phones: the Z/X/C hints are dead weight
+     that costs scroll space on every card. Desktop keeps them. */
+  .shortcut-hints {
+    display: none;
+  }
+
+  /* A50 fast-path: cloud drift is the only paint-heavy scenic animation
+     (full-width SVG paths); stars/glow are cheap opacity pulses and stay.
+     The -18px drift is imperceptible during a 5-10s review on 412px. */
+  .scenic-cloud {
+    animation: none !important;
+  }
+
+  .shortcut-item {
+    font-size: 0.65rem;
+  }
+}
+
+
+/* ==============================================================================
+    14. BACKDROP SYSTEM (Back card only)
+    ==============================================================================
+    Full-card decorative background: fully isolated and swappable.
+    inspired  by thttps://miaai-lab.github.io/Fable-5.1-100-HTML-Files/
+    ENABLE / DISABLE THE BACKDROP
+      Delete or comment out everything between the two marker lines
+      ".backdrop-block-start" and ".backdrop-block-end" below. The rules
+      between the markers contain no comments of their own, so the whole
+      region can also be wrapped in a single block comment, or each rule
+      deleted individually. Nothing else in this stylesheet depends on
+      this block; the Back card then renders exactly as before this
+      section existed.
+
+    SWAP THE BACKGROUND (any future scene)
+      Edit ONLY the two --backdrop-image lines (rule 3 = dark theme,
+      rule 4 = Rice Paper light theme). Any CSS background value works:
+      a data-URI SVG, url(...), a gradient... The other rules are
+      art-agnostic plumbing:
+
+      Block contents, in order:
+        1. strength dial: --backdrop-opacity (currently 0.45)
+        2. generic placement: fixed full-viewport, bottom-anchored, cover
+        3. dark-theme scene: --backdrop-image (ink-wash peaks)
+        4. light-theme scene: --backdrop-image (rice-paper variant)
+        5. z-index plumbing: keeps card content above the scene
+    ============================================================================== */
+
+/* ================= .backdrop-block-start =================
+   (delete or comment everything from here...
+*/
+
+.card.back-card {
+  --backdrop-opacity: 0.45;
+}
+
+.card.back-card::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--backdrop-image);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: bottom center;
+  opacity: var(--backdrop-opacity, 0.45);
+}
+
+.back-card::before {
+  --backdrop-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%20900'%20preserveAspectRatio='xMidYMax%20slice'%3E%3Ccircle%20cx='730'%20cy='380'%20r='140'%20fill='%23c9575f'/%3E%3Cpath%20d='M400%20900%20L400%20780%20C600%20620%20720%20460%20790%20335%20L815%20300%20C835%20285%20885%20285%20905%20300%20L930%20335%20C1000%20460%201120%20620%201280%20780%20L1280%20900%20Z'%20fill='%232e3a5c'/%3E%3Cpath%20d='M772%20362%20L815%20300%20C835%20285%20885%20285%20905%20300%20L948%20362%20C920%20370%20895%20358%20868%20364%20C840%20370%20815%20358%20795%20364%20C786%20366%20778%20364%20772%20362%20Z'%20fill='%23d8dde8'/%3E%3Cpath%20d='M-40%20900%20L-40%20812%20C240%20762%20480%20792%20720%20776%20C960%20760%201180%20724%201400%20748%20C1480%20756%201560%20772%201640%20782%20L1640%20900%20Z'%20fill='%23232f4d'/%3E%3Cpath%20d='M-40%20900%20L-40%20852%20C280%20812%20540%20842%20800%20828%20C1040%20816%201260%20786%201460%20818%20C1520%20828%201600%20844%201640%20838%20L1640%20900%20Z'%20fill='%231b2440'/%3E%3Cpath%20d='M-40%20900%20L-40%20880%20C320%20854%20620%20872%20900%20864%20C1140%20858%201390%20840%201640%20866%20L1640%20900%20Z'%20fill='%23151d33'/%3E%3C/svg%3E");
+}
+
+.card:not(.nightMode):not(.night_mode) .card.back-card::before {
+  --backdrop-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%20900'%20preserveAspectRatio='xMidYMax%20slice'%3E%3Ccircle%20cx='730'%20cy='380'%20r='140'%20fill='%23cc5f43'/%3E%3Cpath%20d='M400%20900%20L400%20780%20C600%20620%20720%20460%20790%20335%20L815%20300%20C835%20285%20885%20285%20905%20300%20L930%20335%20C1000%20460%201120%20620%201280%20780%20L1280%20900%20Z'%20fill='%23d8bd96'/%3E%3Cpath%20d='M772%20362%20L815%20300%20C835%20285%20885%20285%20905%20300%20L948%20362%20C920%20370%20895%20358%20868%20364%20C840%20370%20815%20358%20795%20364%20C786%20366%20778%20364%20772%20362%20Z'%20fill='%23fbf7ee'/%3E%3Cpath%20d='M-40%20900%20L-40%20812%20C240%20762%20480%20792%20720%20776%20C960%20760%201180%20724%201400%20748%20C1480%20756%201560%20772%201640%20782%20L1640%20900%20Z'%20fill='%23e8dcc6'/%3E%3Cpath%20d='M-40%20900%20L-40%20852%20C280%20812%20540%20842%20800%20828%20C1040%20816%201260%20786%201460%20818%20C1520%20828%201600%20844%201640%20838%20L1640%20900%20Z'%20fill='%23dcc8a6'/%3E%3Cpath%20d='M-40%20900%20L-40%20880%20C320%20854%20620%20872%20900%20864%20C1140%20858%201390%20840%201640%20866%20L1640%20900%20Z'%20fill='%23cfb390'/%3E%3C/svg%3E");
+}
+
+.back-card .card-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ...to here) ================== .backdrop-block-end ================= */
+
+
+/* ==============================================================================
+    15. REDUCED MOTION
+    ============================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  /* Static blurs repaint on scroll; cheapest paint for reduced-motion. */
+  .back-card .card-container,
+  .lightbox-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+
+/* ==============================================================================
+    16. CARD ENTRANCE & VISUAL POLISH
+    ==============================================================================
+    One quick settle, no stagger: the old per-element delays (up to 0.14s +
+    0.35s durations) kept every card visibly in flight for ~half a second,
+    which reads as load lag by review #200. A single 0.15s fade keeps a
+    whisper of motion; delete the block for instant cards. All animations
+    respect prefers-reduced-motion (section 15 kills durations). */
+
+/* Back card entrance: everything settles together, once */
+.back-card .word-display,
+.back-card .definition-box,
+.back-card .audio-row,
+.back-card .context-grid,
+.back-card .card-separator {
+  animation: fadeInUp 0.15s ease-out both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Front card: single quick entrance */
+.card-container .sentence-display,
+.card-container .front-word-display,
+.card-container .listening-view {
+  animation: fadeIn 0.15s ease-out both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- Selection styling: accent-tinted highlights --- */
+::selection {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+::-moz-selection {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+
+/* ==============================================================================
+   17. SCENIC BAND
+   Back card top scenic band — illustration fallback or photo mode
+   (ADR 005/006, inherited from the Japanese original).
+   ============================================================================== */
+
+.scenic-band {
+  width: auto;
+  height: calc(var(--scenic-band-h) + 12px);
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+  overflow: hidden;
+  position: relative;
+  contain: paint;
+  /* Auto width + symmetric negative margins keeps the band centered on the
+     wrapper. The extra 12px of painted height tucks under the hero word's
+     12px top padding; the equal negative bottom margin keeps the card's
+     occupied flow height unchanged. */
+  margin: calc(-1 * var(--container-pad-y)) calc(-1 * var(--container-pad-x)) -12px;
+}
+
+.scenic-band svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- illustrated fallback (no Picture) --- */
+.scenic-band:not(:has(.scenic-photo)) {
+  background: var(--scenic-sky);
+}
+
+/* Stars — twinkle very slowly, invisible in daylight via --scenic-star-op */
+.scenic-star {
+  opacity: var(--scenic-star-op);
+  animation: scenic-twinkle 4.5s ease-in-out infinite;
+}
+.scenic-star:nth-of-type(2) { animation-delay: 1.1s; }
+.scenic-star:nth-of-type(3) { animation-delay: 2.3s; }
+
+@keyframes scenic-twinkle {
+  0%, 100% { opacity: calc(var(--scenic-star-op) * .3); }
+  50%      { opacity: var(--scenic-star-op); }
+}
+
+/* Sun/moon — slow breathing glow, reuses --accent-color (no new token) */
+.scenic-glow {
+  animation: scenic-breathe 7s ease-in-out infinite;
+  transform-origin: 232px 18px; /* matches the glow circle's cx/cy in the SVG */
+}
+
+@keyframes scenic-breathe {
+  0%, 100% { opacity: .26; transform: scale(1); }
+  50%      { opacity: .42; transform: scale(1.06); }
+}
+
+/* Cloud sea — two layers drift at different, very slow speeds for depth. */
+.scenic-cloud {
+  animation: scenic-drift 170s ease-in-out infinite alternate;
+}
+.scenic-cloud.is-far {
+  animation-duration: 240s;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes scenic-drift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-18px); }
+}
+
+/* --- photo mode (ADR 006) --- */
+.scenic-photo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer; /* this element is now the lightbox trigger */
+}
+
+.scenic-photo img {
+  position: absolute;
+  top: -12%; left: -12%;
+  width: 124%; height: 124%;
+  object-fit: cover;
+  filter: saturate(var(--scenic-sat)) contrast(1.05) brightness(1.03) blur(var(--scenic-blur));
+}
+
+.scenic-photo .tint {
+  position: absolute; inset: 0;
+  background: var(--accent-color);
+  mix-blend-mode: overlay;
+  opacity: var(--scenic-tint);
+}
+
+.scenic-photo .grain {
+  position: absolute; inset: 0;
+  opacity: .05;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.scenic-photo .wash {
+  position: absolute; inset: 0;
+  background: var(--card-bg);
+  opacity: var(--scenic-wash);
+}
+
+.scenic-photo .fade {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom,
+    transparent 40%,
+    var(--card-bg) 82%,
+    var(--card-bg) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scenic-star, .scenic-glow, .scenic-cloud {
+    animation: none !important;
+  }
+}

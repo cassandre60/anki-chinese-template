@@ -1,0 +1,10 @@
+---
+---
+
+create a new template (with a new folder in /home/mohamed/Desktop/Github), a new gh repo... etc
+simply put we are going to import this template into chineese. very few things will chnage, find what needs to change between these 2 langugaes
+finanly add it to my local anki
+---
+---
+
+change it to Deck: `My Life Decks::Chinese

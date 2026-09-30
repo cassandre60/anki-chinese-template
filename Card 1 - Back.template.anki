@@ -1,0 +1,643 @@
+<!-- BACK CARD TEMPLATE
+     Minimal Chinese Back Card — strong information hierarchy.
+
+     Hierarchy (PRODUCT.md redesign):
+       Band     Scenic band (Picture or illustrated fallback)
+       Level 1  Target word + Pinyin (separate line, tone-colored) — largest
+       Level 2  Primary meaning (compacted definition)    — §6b CSS
+       Level 3  Sentence context                          — core info
+       Level 4  Secondary info — collapsed behind "详情 ▾":
+                translation (click/T/X), extended definition,
+                additional context, hanzi notes, notes, source.
+
+      Removed vs the old layout: sticky tags bar (tags are behavioral
+      metadata now, never decoration), the two-column side dashboard.
+
+      Preserved subsystems: Definition Compactor (§6b), truncator (§6c),
+      native-delegating audio buttons (例句/词语 — playback indicator, not
+      true progress). R is Anki's own shortcut (native replay); the
+      template's custom shortcuts are P/X/C only — R is never added or
+      listed. Lightbox, empty-field collapse.
+-->
+
+<div class="card-wrapper back-card">
+  <div class="card-container">
+
+    {{#Picture}}
+    <div class="scenic-band">
+       <div class="scenic-photo scenic-photo-trigger"
+           onclick="openLightbox(this)" role="button" tabindex="0"
+           aria-label="放大图片"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); this.click()}">
+        {{Picture}}
+        <div class="tint"></div>
+        <div class="grain"></div>
+        <div class="wash"></div>
+        <div class="fade"></div>
+      </div>
+    </div>
+    {{/Picture}}
+    {{^Picture}}
+    <div class="scenic-band" aria-hidden="true">
+      <svg viewBox="0 0 400 60" preserveAspectRatio="none" focusable="false">
+        <circle class="scenic-star" cx="70" cy="8" r="1.1" fill="#fff"/>
+        <circle class="scenic-star" cx="330" cy="6" r="1" fill="#fff"/>
+        <circle class="scenic-star" cx="40" cy="16" r=".9" fill="#fff"/>
+        <circle class="scenic-glow" cx="232" cy="18" r="15" fill="var(--accent-color)"/>
+        <circle cx="232" cy="18" r="9" fill="var(--accent-color)" opacity=".4"/>
+        <path d="M156,42 L185,2 L204,26 L211,23 L216,42 Z" fill="var(--scenic-peak)"/>
+        <path d="M185,2 L173,20 L179,17 L184,23 L190,16 L196,24 L204,26 L192,12 Z" fill="var(--scenic-ridge)" opacity=".92"/>
+        <g class="scenic-cloud is-far">
+          <path d="M0,36 C50,28 100,38 160,31 C230,23 300,36 400,28 L400,60 L0,60 Z" fill="var(--scenic-cloud)" opacity=".55"/>
+        </g>
+        <g class="scenic-cloud">
+          <path d="M0,46 C60,39 130,48 210,41 C290,34 340,46 400,40 L400,60 L0,60 Z" fill="var(--scenic-cloud)" opacity=".85"/>
+        </g>
+        <path d="M0,54 C60,50 130,56 210,52 C290,48 340,55 400,51 L400,60 L0,60 Z" fill="var(--card-bg)"/>
+      </svg>
+    </div>
+    {{/Picture}}
+
+    <!-- LEVEL 1: TARGET + META — 3-column grid on wide screens
+         (left meta | centered word | right meta; see Style §6 hero-header).
+         The word stays truly centered: equal 1fr side columns absorb any
+         asymmetry. Narrow phones stack the word on its own row with the
+         two sides sharing one tight row below it. -->
+    <div class="hero-header">
+      <div class="hero-side hero-side-left">
+        {{#Frequency}}
+          <div class="frequency-badge" data-freq="{{text:Frequency}}">
+            <div class="frequency-bar-track">
+              <div class="frequency-bar-fill"></div>
+            </div>
+            <span class="frequency-stars"></span>
+          </div>
+        {{/Frequency}}
+
+        <div class="audio-row">
+          {{#Word Audio}}
+            <span class="audio-btn-wrapper">
+              <button type="button" class="circular-audio-btn small-audio-btn" title="播放词语语音" aria-label="播放词语语音" onclick="playCircularAudio(this)">
+                <svg class="audio-progress-ring" viewBox="0 0 44 44">
+                  <circle class="ring-bg" cx="22" cy="22" r="19" />
+                  <circle class="ring-fill" cx="22" cy="22" r="19" stroke-dasharray="119.38" stroke-dashoffset="119.38" />
+                </svg>
+                <span class="audio-btn-content">
+                  <span class="audio-btn-label">词语</span>
+                </span>
+              </button>
+              <span class="raw-audio-source" aria-hidden="true">{{Word Audio}}</span>
+            </span>
+          {{/Word Audio}}
+        </div>
+      </div>
+
+      <div class="hero-word-wrap">
+        {{#Expression}}
+          <div class="word-display">{{edit:Expression}}</div>
+        {{/Expression}}
+        {{#Pinyin}}
+          <div class="pinyin-display">{{edit:Pinyin}}</div>
+        {{/Pinyin}}
+      </div>
+
+      <div class="hero-side hero-side-right">
+
+        <div class="audio-row">
+          {{#Sentence Audio}}
+            <span class="audio-btn-wrapper">
+              <button type="button" class="circular-audio-btn small-audio-btn" title="播放例句语音" aria-label="播放例句语音" onclick="playCircularAudio(this)">
+                <svg class="audio-progress-ring" viewBox="0 0 44 44">
+                  <circle class="ring-bg" cx="22" cy="22" r="19" />
+                  <circle class="ring-fill" cx="22" cy="22" r="19" stroke-dasharray="119.38" stroke-dashoffset="119.38" />
+                </svg>
+                <span class="audio-btn-content">
+                  <span class="audio-btn-label">例句</span>
+                </span>
+              </button>
+              <span class="raw-audio-source" aria-hidden="true">{{Sentence Audio}}</span>
+            </span>
+          {{/Sentence Audio}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Decorative separator: seigaiha-inspired arc motif between
+         hero header and primary meaning. Matches the one below the
+         definition — pure decorative, same as its twin. -->
+    <div class="card-separator" aria-hidden="true"><span class="sep-motif"></span></div>
+
+    <!-- LEVEL 2: PRIMARY MEANING (compact: see Definition Compactor §6b) -->
+    {{#Definition}}
+      <div class="definition-box primary-definition" tabindex="0" role="button" aria-expanded="false" onclick="expandDefinition(this)" onkeydown="handleDefinitionKey(event, this)">
+        {{edit:Definition}}
+      </div>
+    {{/Definition}}
+    {{^Definition}}
+      {{#Extended definition}}
+        <div class="definition-box primary-definition" tabindex="0" role="button" aria-expanded="false" onclick="expandDefinition(this)" onkeydown="handleDefinitionKey(event, this)">
+          {{Extended definition}}
+        </div>
+      {{/Extended definition}}
+    {{/Definition}}
+
+    <!-- Decorative separator between
+         hero section (word/definition/audio) and context area.
+         Pure decorative — CSS collapses it to nothing if absent. -->
+    <div class="card-separator" aria-hidden="true"><span class="sep-motif"></span></div>
+
+    <!-- LEVEL 3: CONTEXT (sentence; core information) -->
+    <div class="context-grid">
+      <div class="context-main">
+        {{#Sentence}}
+          <div class="sentence-chinese">
+            {{edit:Sentence}}
+          </div>
+          {{#Sentence Pinyin}}
+            <div class="sentence-pinyin">{{edit:Sentence Pinyin}}</div>
+          {{/Sentence Pinyin}}
+        {{/Sentence}}
+
+        <!-- Orphan context (When Sentence is empty) -->
+        {{^Sentence}}
+          {{#context}}
+            <div class="html-content context-only">{{edit:context}}</div>
+          {{/context}}
+        {{/Sentence}}
+      </div>
+    </div>
+
+    <!-- TRANSLATION — independent toggle (X/T, click), not part of More -->
+    {{#Sentence}}
+      {{#Translation}}
+        <div class="translation-box"
+             role="button"
+             tabindex="0"
+             aria-expanded="false"
+              onclick="if(event.target.closest('.translation-text')) return; this.classList.toggle('revealed'); this.setAttribute('aria-expanded', this.classList.contains('revealed'))"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+          <div class="translation-hint">译文 ▾</div>
+          <div class="translation-text">{{edit:Translation}}</div>
+        </div>
+      {{/Translation}}
+    {{/Sentence}}
+    {{^Sentence}}
+      {{#Translation}}
+        <div class="translation-text revealed-static">{{edit:Translation}}</div>
+      {{/Translation}}
+    {{/Sentence}}
+
+    <!-- LEVEL 4: SECONDARY INFORMATION — collapsed behind "详情 ▾" -->
+    <div class="more-section" hidden>
+      {{#Sentence}}
+        {{#context}}
+          <div class="html-content secondary-block">{{edit:context}}</div>
+        {{/context}}
+      {{/Sentence}}
+
+      {{#Hanzi Notes}}
+        <div class="html-content secondary-block">{{edit:Hanzi Notes}}</div>
+      {{/Hanzi Notes}}
+
+      {{#Notes}}
+        <div class="html-content secondary-block">{{edit:Notes}}</div>
+      {{/Notes}}
+
+      <!-- Full dictionary definition (only when the compact one exists too).
+           Inert <template>: up to ~13KB of glossary is parsed but never
+           rendered, styled, or laid out until More is first opened. -->
+      {{#Definition}}
+        {{#Extended definition}}
+          <div class="extended-def-wrapper">
+            <div class="extended-def-header">详细词典</div>
+            <template class="extended-full-tpl">{{Extended definition}}</template>
+            <div class="html-content secondary-block extended-full" data-lazy hidden></div>
+          </div>
+        {{/Extended definition}}
+      {{/Definition}}
+
+      <!-- Source: hidden by default like all secondary info —
+           revealed via 详情 ▾ / C with the rest of More. -->
+      {{#Source}}
+        <div class="source-footer">{{edit:Source}}</div>
+      {{/Source}}
+
+      <!-- Tags display inside More section -->
+      {{#Tags}}
+        <div class="tags-block secondary-block">{{Tags}}</div>
+      {{/Tags}}
+    </div>
+
+    <!-- Two-way "详情 ▾" / "关闭 ▴" toggle -->
+    <button type="button" class="more-toggle" aria-expanded="false" onclick="toggleMore(this)">
+      <span class="more-text">详情</span> <span class="more-caret">▾</span>
+    </button>
+
+    <!-- SHORTCUT / FEATURE DISCOVERABILITY BAR
+         R is Anki-owned (native replay) — never listed here as a template
+         shortcut. Custom template shortcuts only: P (Pinyin), X
+         (translation), C (expanded-info toggle). -->
+    <div class="shortcut-hints" aria-label="快捷键">
+      <span class="shortcut-item"><kbd>P</kbd> 拼音</span>
+      <span class="shortcut-item"><kbd>X</kbd> 译文</span>
+      <span class="shortcut-item"><kbd>C</kbd> 展开</span>
+    </div>
+
+  </div> <!-- End card-container -->
+</div>
+
+<!-- Lightbox, Audio, Frequency & Secondary-Section Scripts -->
+<script>
+  (function() {
+    /* --- SECONDARY SECTION ("详情 ▾" / "关闭 ▴" Two-way Toggle) --- */
+    window.toggleMore = function(btn) {
+      var section = document.querySelector('.more-section');
+      if (!section) return;
+      /* Lazy extended definition: stamp the inert template into its host
+         once, on first open. Until then it costs no style/layout/paint. */
+      section.querySelectorAll('template.extended-full-tpl').forEach(function(t) {
+        var host = t.parentNode.querySelector('.extended-full');
+        if (host && !host.hasChildNodes()) {
+          host.appendChild(t.content.cloneNode(true));
+          host.removeAttribute('hidden');
+        }
+        t.remove();
+      });
+      var isExpanded = btn.getAttribute('aria-expanded') === 'true';
+      section.hidden = isExpanded;
+      btn.setAttribute('aria-expanded', String(!isExpanded));
+      btn.classList.toggle('is-open', !isExpanded);
+      var textSpan = btn.querySelector('.more-text');
+      if (textSpan) {
+        textSpan.textContent = !isExpanded ? '关闭' : '详情';
+      }
+    };
+
+    /* --- FREQUENCY VISUALIZER (5-Star Scale + Tier Theming) ---
+       Single table: one edit point for thresholds, labels, fills. */
+    const FREQ_TIERS = [
+      { max: 500,   stars: 5, cls: 'freq-very-common', label: '最常用 (前500)',    fill: 95 },
+      { max: 2500,  stars: 4, cls: 'freq-common',      label: '常用 (前2,500)',   fill: 75 },
+      { max: 7000,  stars: 3, cls: 'freq-medium',      label: '常见 (前7,000)',   fill: 55 },
+      { max: 18000, stars: 2, cls: 'freq-uncommon',    label: '较少 (前1.8万)',   fill: 35 },
+      { max: Infinity, stars: 1, cls: 'freq-rare',     label: '罕用 (1.8万以外)', fill: 15 },
+    ];
+    window.renderFrequencyIndicator = function() {
+      const badges = document.querySelectorAll('.frequency-badge[data-freq]');
+      badges.forEach(badge => {
+        const raw = badge.getAttribute('data-freq') || '';
+        const match = raw.replace(/,/g, '').match(/\d+(?:\.\d+)?/);
+        if (!match) return;
+
+        const val = parseFloat(match[0]);
+        if (isNaN(val) || val <= 0) return;
+
+        // Chinese Frequency Tiers (Top 500 / 2.5k / 7k / 18k / Rare)
+        let tier = FREQ_TIERS[FREQ_TIERS.length - 1];
+        for (const t of FREQ_TIERS) { if (val <= t.max) { tier = t; break; } }
+        const stars = tier.stars;
+        const tierClass = tier.cls;
+        const tierLabel = tier.label;
+        const fillPercent = tier.fill;
+
+        badge.classList.add(tierClass);
+        badge.setAttribute('title', '词汇频率: ' + raw.trim() + ' • ' + tierLabel);
+        badge.setAttribute('aria-label', '词汇频率: ' + tierLabel);
+
+        const fill = badge.querySelector('.frequency-bar-fill');
+        if (fill) fill.style.width = fillPercent + '%';
+
+        const starContainer = badge.querySelector('.frequency-stars');
+        if (starContainer) {
+          starContainer.textContent = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+        }
+      });
+    };
+
+    /* --- LIGHTBOX CONTROLLER (click to expand / click outside to close) --- */
+    window.openLightbox = function(target) {
+      const img = target.querySelector('img') || (target.tagName === 'IMG' ? target : null);
+      if (!img || !img.getAttribute('src')) return;
+      /* Only local Anki media: refuse remote/file URLs that would leak
+         (IP/DNS) or fail outside the media dir. Relative paths pass.
+         Protocol-relative //host/... is remote too (resolves against the
+         reviewer base), so it is refused as well. */
+      if (/^((?:https?|file|javascript):|data:text\/html|\/\/)/i.test(img.getAttribute('src'))) return;
+      if (document.querySelector('.lightbox-overlay')) return;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'lightbox-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+
+      const clone = document.createElement('img');
+      clone.src = img.src;
+      clone.className = 'expanded-img';
+      clone.referrerPolicy = 'no-referrer';
+      clone.alt = img.alt || '';
+
+      overlay.appendChild(clone);
+      document.body.appendChild(overlay);
+
+      const closeOverlay = () => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        document.removeEventListener('keydown', handleKey);
+        if (target && target.focus) target.focus();
+        else if (img.focus) img.focus();
+      };
+
+      const handleKey = (e) => {
+        if (e.key === 'Escape') closeOverlay();
+      };
+
+      overlay.onclick = (e) => {
+        if (e.target === overlay) closeOverlay();
+      };
+      document.addEventListener('keydown', handleKey);
+    };
+
+    /* Card flip with lightbox open: never orphan the overlay in a re-used DOM. */
+    if (typeof window.addEventListener === 'function') {
+      window.addEventListener('pagehide', () => {
+        const ov = document.querySelector('.lightbox-overlay');
+        if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+      });
+    }
+
+    /* --- CIRCULAR AUDIO CONTROLLER (native-only) --- */
+    window.currentActiveBtn = window.currentActiveBtn || null;
+    window.currentActiveTimer = window.currentActiveTimer || null;
+    /* WebView DOM re-use: never pin a detached button across card flips. */
+    if (typeof window.addEventListener === 'function') {
+        window.addEventListener('pagehide', () => { try { window.resetAudioState(); } catch (_) {} });
+    }
+
+    window.resetAudioState = function() {
+        if (window.currentActiveTimer) {
+            clearTimeout(window.currentActiveTimer);
+            window.currentActiveTimer = null;
+        }
+        if (window.currentActiveBtn) {
+            window.currentActiveBtn.classList.remove('is-playing');
+            const ring = window.currentActiveBtn.querySelector('.ring-fill');
+            if (ring) {
+                const circ = parseFloat(ring.getAttribute('stroke-dasharray')) || 119.38;
+                ring.style.transition = '';
+                ring.style.strokeDashoffset = circ;
+            }
+            window.currentActiveBtn = null;
+        }
+    };
+
+    window.playCircularAudio = function(btn) {
+        if (window.currentActiveBtn === btn) return;
+        window.resetAudioState();
+        const ringFill = btn.querySelector('.ring-fill');
+
+        const scope = (btn.closest && btn.closest('.audio-btn-wrapper')) || document;
+        const nativeReplay = scope.querySelector('.replaybutton, .replay-button, a.sound, .soundLink')
+          || btn.querySelector('.replaybutton, .replay-button, a.sound, .soundLink');
+        if (nativeReplay) {
+            try { nativeReplay.click(); } catch (e) { return; }
+            btn.classList.add('is-playing');
+            if (ringFill) {
+                ringFill.style.transition = 'stroke-dashoffset 0.8s ease-in-out';
+                ringFill.style.strokeDashoffset = '0';
+            }
+            window.currentActiveBtn = btn;
+            window.currentActiveTimer = setTimeout(() => {
+                if (window.currentActiveBtn === btn) {
+                    window.resetAudioState();
+                }
+            }, 800);
+        }
+    };
+
+    /* --- PINYIN TONE COLORS ---
+       The Pinyin field is plain text ("zhōng guó"). Wrap each syllable
+       in a <span class="tone-N"> so §9b can color the four Mandarin tones.
+       Tone is detected from the vowel diacritics Yomitan writes:
+         tone 1: ā ē ī ō ū ǖ
+         tone 2: á é í ó ú ǘ
+         tone 3: ǎ ě ǐ ǒ ǔ ǚ
+         tone 4: à è ì ò ù ǜ
+         neutral (tone 0): no diacritic at all
+       Numeric style ("zhong1 guo2") is supported too: a trailing digit on
+       the syllable wins over the diacritics. The original text is
+       preserved inside the span, so nothing is ever lost — only wrapped.
+       Idempotent: a re-render over an already-wrapped DOM is a no-op. */
+    const PINYIN_TONE_MARKS = {
+      'ā': 1, 'ē': 1, 'ī': 1, 'ō': 1, 'ū': 1, 'ǖ': 1,
+      'á': 2, 'é': 2, 'í': 2, 'ó': 2, 'ú': 2, 'ǘ': 2,
+      'ǎ': 3, 'ě': 3, 'ǐ': 3, 'ǒ': 3, 'ǔ': 3, 'ǚ': 3,
+      'à': 4, 'è': 4, 'ì': 4, 'ò': 4, 'ù': 4, 'ǜ': 4
+    };
+    window.applyPinyinTones = function(root) {
+      const scope = root || document;
+      scope.querySelectorAll('.pinyin-display, .sentence-pinyin').forEach(function(el) {
+        if (el.dataset.tonesApplied === '1') return;
+        /* Only rewrite plain-text nodes: a mined field may carry markup
+           (numbers, <b>), which must survive untouched. */
+        if (el.querySelector('*')) return;
+        const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!text) return;
+        el.textContent = '';
+        /* Split on whitespace but keep it: syllable boundaries in Pinyin
+           are the tone carriers, and the spacing is the reading rhythm. */
+        text.split(' ').forEach(function(syllable, i) {
+          if (i > 0) el.appendChild(document.createTextNode(' '));
+          if (!syllable) return;
+          let tone = 0;
+          const numeric = syllable.match(/([0-5])\s*$/);
+          if (numeric) {
+            tone = parseInt(numeric[1], 10);
+            /* Tone 5 is the neutral tone: no contour to color, and the
+               palette only defines tone-0..4, so fold it onto neutral
+               rather than emitting a class with no rules behind it. */
+            if (tone === 5) tone = 0;
+          } else {
+            for (const ch of syllable) {
+              if (PINYIN_TONE_MARKS[ch]) { tone = PINYIN_TONE_MARKS[ch]; break; }
+            }
+          }
+          const span = document.createElement('span');
+          span.className = 'tone-' + tone;
+          span.textContent = syllable;
+          el.appendChild(span);
+        });
+        el.dataset.tonesApplied = '1';
+      });
+    };
+
+    /* --- DEFINITION TRUNCATOR (3-line cap + click to expand, stays open) --- */
+    window.expandDefinition = function(element) {
+      if (element.classList.contains('is-expanded')) return;
+      element.classList.add('is-expanded');
+      element.setAttribute('aria-expanded', 'true');
+    };
+
+    window.handleDefinitionKey = function(evt, element) {
+      if (evt.key === 'Enter' || evt.key === ' ') {
+        evt.preventDefault();
+        window.expandDefinition(element);
+      }
+    };
+
+    window.initDefinitionTruncation = function(root) {
+      const scope = root || document;
+      /* Subpixel rounding tolerance for scrollHeight vs clientHeight. */
+      const TRUNC_SLACK_PX = 2;
+      scope.querySelectorAll('.primary-definition').forEach(function(box) {
+        if (!box.textContent || !box.textContent.trim()) { box.remove(); return; }
+        box.classList.remove('is-expanded');
+        box.setAttribute('aria-expanded', 'false');
+        const overflows = box.scrollHeight > box.clientHeight + TRUNC_SLACK_PX;
+        box.classList.toggle('is-truncated', overflows);
+      });
+    };
+
+    /* --- GLOSSARY PRUNE (live-DOM twin of CSS §6b) ---
+       §6b hides overflow dictionaries/senses/appendices with display:none,
+       but hidden nodes still cost parse + style-match + layout. Removing
+       exactly what §6b hides is rendering-identical and shrinks every
+       later pass (including the truncation measure). Each removal mirrors
+       one §6b rule 1:1 — keep them paired; test_compactor.py enforces the
+       mirror on fixtures (prune ⇒ hide rules match nothing, text equal). */
+    window.pruneCompactedGlossary = function(root) {
+      const scope = root || document;
+      /* CSS `A ~ A` counts preceding same-parent siblings: group matches
+         by parent, drop from index `keep` on. Mirrors §6b keep-counts:
+         dictionaries 1, senses 2 (l3-a keeps 1), plain glosses 2. */
+      const dropFrom = (box, sel, keep) => {
+        const byParent = new Map();
+        box.querySelectorAll(sel).forEach(function(el) {
+          const p = el.parentNode;
+          if (!byParent.has(p)) byParent.set(p, []);
+          byParent.get(p).push(el);
+        });
+        byParent.forEach(function(list) {
+          for (let i = keep; i < list.length; i++) list[i].remove();
+        });
+      };
+      /* Chinese dictionaries (CC-CEDICT / Yomitan Chinese) use plain
+         structural markup — no Japanese `data-sc-name="語義G"` sense
+         wrappers. The generic keeps (1 dictionary, ≤2 senses/glosses) plus
+         the metadata/attribution strip are what apply here; the Japanese
+         structural selectors stay out of the Chinese port. */
+      scope.querySelectorAll('.primary-definition').forEach(function(box) {
+        dropFrom(box, '.yomitan-glossary > ol > li', 1);
+        dropFrom(box, '.yomitan-glossary > ul > li', 1);
+        dropFrom(box, '[data-sc-content="glossary"] > li', 2);
+        dropFrom(box, '[data-sc-content="glossary"] > ul > li', 2);
+        box.querySelectorAll(
+          '[data-sc-content="forms"], div[data-sc-content="attribution"], ' +
+          'span[data-sc-content="attribution"], i'
+        ).forEach(function(n) { n.remove(); });
+      });
+    };
+
+    /* --- SECONDARY SECTION CLEANUP + KEYBOARD SHORTCUTS --- */
+    window.initSecondarySection = function() {
+      try {
+        var section = document.querySelector('.more-section');
+        var btn = document.querySelector('.more-toggle');
+        if (section && btn) {
+          /* .source-footer counts as secondary content: it lives inside
+             More (hidden by default, revealed via 详情 ▾ / C). */
+          section.querySelectorAll('.secondary-block, .extended-full, .source-footer').forEach(function(el) {
+            /* Lazy host: content lives in the sibling template until first
+               open — never strip it here. */
+            if (el.hasAttribute('data-lazy')) return;
+            if (!el.textContent || !el.textContent.trim()) el.remove();
+          });
+          if (!section.querySelector('.secondary-block, .extended-full, .source-footer, template.extended-full-tpl')) {
+            btn.remove();
+            section.remove();
+          }
+        }
+      } catch (e) { /* keep default rendering */ }
+      try {
+        document.querySelectorAll('.translation-box, .revealed-static').forEach(function(el) {
+          if (!el.textContent || !el.textContent.trim()) el.remove();
+        });
+      } catch (e) { /* keep default rendering */ }
+    };
+
+    window.initCardShortcuts = function() {
+      var wrapper = document.querySelector('.card-wrapper.back-card');
+      if (!wrapper || wrapper.dataset.shortcutsBound) return;
+      wrapper.dataset.shortcutsBound = '1';
+      document.addEventListener('keydown', function(e) {
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+        var tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+        var key = (e.key || '').toLowerCase();
+        if (key === 'p') {
+          e.preventDefault();
+          e.stopPropagation();
+          wrapper.classList.toggle('pinyin-hidden');
+        } else if (key === 'x' || key === 't') {
+          e.preventDefault();
+          e.stopPropagation();
+          var box = wrapper.querySelector('.translation-box');
+          if (!box) return;
+          var isRevealed = box.classList.contains('revealed');
+          if (isRevealed) {
+            box.classList.remove('revealed');
+            box.setAttribute('aria-expanded', 'false');
+          } else {
+            box.classList.add('revealed');
+            box.setAttribute('aria-expanded', 'true');
+          }
+        } else if (key === 'c') {
+          e.preventDefault();
+          e.stopPropagation();
+          /* C toggles More + definitions (isolated: never touches translation) */
+          var moreBtn = wrapper.querySelector('.more-toggle');
+          var isCurrentlyOpen = moreBtn && moreBtn.getAttribute('aria-expanded') === 'true';
+
+          if (!isCurrentlyOpen) {
+            if (moreBtn) window.toggleMore(moreBtn);
+            wrapper.querySelectorAll('.primary-definition').forEach(function(d) {
+              window.expandDefinition(d);
+            });
+          } else {
+            if (moreBtn) window.toggleMore(moreBtn);
+          }
+        }
+      });
+    };
+
+    /* Prune first: the truncation measure below then runs over the small
+       live DOM instead of the full hidden glossary. */
+    window.pruneCompactedGlossary();
+    window.applyPinyinTones();
+    window.renderFrequencyIndicator();
+    window.initSecondarySection();
+    window.initCardShortcuts();
+
+    /* Truncation is measured ONCE, after fonts settle: the boot-time measure
+       forced a full sync layout over the glossary, then fonts.ready forced
+       it again (the early result can be wrong once webfonts arrive, so it
+       was partly thrown away). Local fonts resolve pre-paint, so the
+       chevron timing is unchanged in practice. */
+    window.__truncQueued = false;
+    window.queueTruncation = function() {
+      if (window.__truncQueued) return;
+      window.__truncQueued = true;
+      var run = function() {
+        window.__truncQueued = false;
+        window.initDefinitionTruncation();
+      };
+      try {
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(function() {
+          window.renderFrequencyIndicator();
+          run();
+        });
+        else if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+        else setTimeout(run, 0);
+      } catch (e) { run(); }
+    };
+    window.queueTruncation();
+  })();
+</script>

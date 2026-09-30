@@ -1,0 +1,10 @@
+__pycache__/
+*.apkg
+backups/
+dist/
+.anki_fields.json
+conversations/
+reports/
+*.bak*
+*backup*
+repomix-output.*
