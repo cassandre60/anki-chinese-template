@@ -159,7 +159,7 @@ only):
 git clone https://github.com/mansourvery-hub/anki-chinese-template.git
 cd anki-chinese-template
 python3 sync_to_anki.py    # snapshots live state to backups/, then pushes Front/Back/CSS
-python3 build_apkg.py       # builds + verifies dist/*.apkg from the deck
+python3 export_apkg.py       # exports + verifies dist/*.apkg from the deck
 ```
 
 The note type and deck must exist first. One-shot, create-only:
@@ -176,13 +176,15 @@ deck is empty, and because a fresh install should be a smoke test of the
 front modes, the compactor, Pinyin tones and the listening front. Delete
 them any time — the note type and deck survive.
 
-> **`build_apkg.py` does not use Anki's exporter.** The installed
-> Anki-Connect is built for Anki 25.x and runs on Anki 26.09.3, where its
-> `exportPackage` silently returns success while exporting the **Default**
-> deck. `build_apkg.py` therefore writes the package itself and then
-> re-opens it to assert the note type, deck, and note count — a mismatch
-> aborts `finish.sh` before anything is published. See
-> [ADR 009](docs/adr/009-build-apkg-in-repo.md).
+> **`export_apkg.py` verifies what Anki wrote.** `exportPackage` returns
+> `True` and writes a structurally valid package in every case, including
+> the empty-deck case above. So the script re-opens the zip, reads
+> `collection.anki21`, and asserts the note type, deck, and card count
+> before `finish.sh` is allowed to commit, push, or publish. Note that an
+> apkg also contains a vestigial `collection.anki2` holding stock note
+> types (Basic, Cloze, …) — inspecting that one will make a good package
+> look broken. [ADR 009](docs/adr/009-verify-exported-apkg.md) records how
+> this repo got that wrong once.
 
 **Option 3 — Manual:** paste `Card 1 - Front.template.anki`,
 `Card 1 - Back.template.anki`, and `Card 1 - Style.css` into the card template
@@ -200,7 +202,7 @@ editor (**Tools → Manage Note Types → Cards**).
 ├── bootstrap_chinese_model.py     # One-shot: create the note type + deck (refuses to re-run)
 ├── set_field_descriptions.py      # Idempotent: writes the field descriptions
 ├── sync_to_anki.py                # Push templates/CSS to Anki (pre-sync backup)
-├── build_apkg.py                  # Build + verify dist/*.apkg (see ADR 009)
+├── export_apkg.py                 # Export + verify dist/*.apkg (see ADR 009)
 ├── seed_sample_cards.py           # One-shot: 3 sample notes so the deck exports
 ├── verify                         # Local quality gate (tests only, no side effects)
 ├── finish.sh                      # One command: verify + sync + export + commit + push + release
@@ -228,7 +230,7 @@ run one command:
 # --local: sync + export + commit only · --minor: bump v0.x.0 · --prompt "text": archive prompt
 ```
 
-This runs tests, syncs to Anki, builds and **verifies** the apkg, commits,
+This runs tests, syncs to Anki, exports and **verifies** the apkg, commits,
 pushes, and publishes a tagged release.
 
 `tests/` covers the compactor selectors and their JS mirror, template

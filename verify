@@ -34,6 +34,6 @@ echo "==> verify: back More lazy-load + prune behavior (headless Chrome, skipped
 python3 tests/test_back_more.py
 echo "==> verify: headless layout checks (skipped gracefully without Chrome)"
 python3 tests/test_layout.py
-echo "==> verify: apkg builder + release-asset gate"
+echo "==> verify: apkg export + release-asset verification gate"
 python3 tests/test_apkg.py
 echo "verify: OK"

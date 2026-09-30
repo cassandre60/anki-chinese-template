@@ -98,8 +98,18 @@ parallelizable; P3 must follow P2 (the Pinyin rules need the markup).
   (2 senses kept, 2nd dictionary hidden), sentence + sentence-Pinyin,
   collapsed 译文/详情, and a `#listening`-without-audio front falling back to
   the sentence front. Status: COMPLETE.
-- **P7 — Release.** git init, first commit, `gh repo create`, push, tag
-  `v0.1.0`, apkg asset. Status: COMPLETE.
+- **P7 — Release.** git init, first commit, `gh repo create`, push, tag,
+  apkg asset. Status: COMPLETE.
+- **P8 — apkg verification (ADR 009).** During P7 the export was
+  *misdiagnosed* as broken: an apkg was inspected via its
+  `collection.anki2` entry, which is a vestigial companion holding stock
+  note types (Basic/Cloze/Image Occlusion) rather than the exported
+  content, and that made a working export look like a Default-deck export.
+  A hand-rolled apkg writer was written to replace it. Correction:
+  `exportPackage` works; the writer was deleted; `export_apkg.py` now
+  exports and then re-reads `collection.anki21` to assert the note type,
+  deck, and card count, with `tests/test_apkg.py` pinning both the correct
+  path and the five failure modes it must reject. Status: COMPLETE.
 
 ## Roadmap (evolution loop input, not committed scope)
 

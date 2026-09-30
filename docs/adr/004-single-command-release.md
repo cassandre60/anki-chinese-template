@@ -8,22 +8,22 @@ dropped late in sessions when run manually.
 ## Decision
 
 `finish.sh` runs the full chain in deterministic order and stops on first
-failure: `verify → version stamp → sync_to_anki.py → build_apkg.py →
+failure: `verify → version stamp → sync_to_anki.py → export_apkg.py →
 commit → push main → gh release create --target main → fetch tag`. The tag
 points at the exact pushed commit. `./verify` is the side-effect-free
 subset it delegates to. `sync_to_anki.py` snapshots the live Anki state to
 `backups/<timestamp>/` (microsecond stamps) before overwriting and aborts
-on empty live state. `build_apkg.py` writes the apkg into gitignored
-`dist/` **and verifies it before returning**; the apkg ships as a GitHub
-Release asset, never in the repo. No-op runs never publish.
+on empty live state. `export_apkg.py` exports the deck into gitignored
+`dist/` **and re-opens the written package to verify it before
+returning**; the apkg ships as a GitHub Release asset, never in the repo.
+No-op runs never publish.
 
 > **Amended by ADR 009.** This ADR originally specified
-> `release_apkg.py` → Anki-Connect `exportPackage`. That action is
-> broken on Anki 26.x (it silently exports the Default deck while
-> reporting success), so step 3 is now `build_apkg.py`: the package is
-> written in-repo with stdlib `sqlite3`/`zipfile` and re-opened for
-> verification. The ordering, the snapshots, and the no-op protection
-> above are unchanged.
+> `release_apkg.py` → Anki-Connect `exportPackage` with no verification.
+> The export action is correct and is still what runs; the addition is the
+> verification step, because an empty deck exports as a package with no
+> note type while reporting success. The ordering, the snapshots, and the
+> no-op protection above are unchanged.
 
 ## Consequences
 

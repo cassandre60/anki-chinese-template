@@ -22,7 +22,7 @@ Anki renderers: Desktop Qt6 WebEngine · AnkiDroid WebView
   │  live services at render time: AnkiConnect :8765 (desktop only)
   ↓
 Tooling (stdlib-only): fetch_anki_fields.py · sync_to_anki.py ·
-                       build_apkg.py · verify · finish.sh
+                       export_apkg.py · verify · finish.sh
                        bootstrap_chinese_model.py (one-shot, create-only)
                        set_field_descriptions.py (idempotent)
                        seed_sample_cards.py (one-shot, create-only)
@@ -183,10 +183,11 @@ bootstrap_chinese_model.py → one-shot: createModel + createDeck (refuses to re
 set_field_descriptions.py  → idempotent: writes the Fields-dialog descriptions
 sync_to_anki.py      → snapshot backups/<ts>/, push Front/Back/CSS
 seed_sample_cards.py  → 3 sample notes so the deck (and the apkg) is non-empty
-build_apkg.py         → read the live deck over Anki-Connect, write a
-                        schema-11 collection with stdlib sqlite3+zipfile,
-                        then RE-OPEN it and assert the note type, deck and
-                        note count (hard gate; ADR 009)
+export_apkg.py         → exportPackage deck → dist/*.apkg, then RE-OPEN
+                        the zip, read `collection.anki21`, and assert the
+                        note type, deck and note count (hard gate;
+                        ADR 009). Refuses to export an empty deck, which
+                        would silently produce a package with no note type.
 verify               → local quality gate (tests only, no side effects)
 finish.sh            → verify → stamp → sync → export → commit → push main → release (--target main) → fetch tag
 tests/               → test_compactor.py + test_templates.py
@@ -230,10 +231,11 @@ entity graph exists beyond what is shown.
 - **008** The compactor targets Chinese dictionary structure only; the
   Japanese structured-content sense selectors were removed rather than left
   as dead rules.
-- **009** The apkg is built in-repo and verified after writing, because
-  Anki-Connect's `exportPackage` silently exports the Default deck on
-  Anki 26.x — a release asset that installs the wrong templates while
-  reporting success.
+- **009** The exported apkg is verified by re-opening it and reading
+  `collection.anki21`. `exportPackage` is correct, but an empty deck
+  exports as a package containing no note type while returning success —
+  and an apkg's `collection.anki2` is a vestigial companion that will
+  mislead any inspection reading the wrong entry.
 
 ## Evolution rule
 
