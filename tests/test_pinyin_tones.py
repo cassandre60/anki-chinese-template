@@ -200,6 +200,19 @@ def main():
     if r:
         check("non-EFDRC wrapper: left untouched", r.get("classes") == [], str(r.get("classes")))
 
+    # --- 9. Bracket readings (字[pinyin]) stack furigana-style ---
+    r = render(fn, "对[duì] 投[tóu] 资[zī]")
+    if r:
+        check("brackets: tone 4, 2, 1 with stacked pysub readings, no brackets shown",
+              r.get("classes") == ["tone-4 pystack:对duì", "pysub:duì",
+                                   "tone-2 pystack:投tóu", "pysub:tóu",
+                                   "tone-1 pystack:资zī", "pysub:zī"],
+              str(r.get("classes")))
+        check("brackets: storage text intact (display drops brackets)",
+              r.get("text") == "对duì 投tóu 资zī", repr(r.get("text")))
+        check("brackets: second pass is a no-op",
+              r.get("classesAfterSecond") == r.get("classes"), str(r.get("classesAfterSecond")))
+
     print()
     print(f"{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0

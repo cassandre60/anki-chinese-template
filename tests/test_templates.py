@@ -196,7 +196,8 @@ def main():
           all(re.search(rf"\.tone-{n}\s*\{{[^}}]*color:\s*var\(--tone-{n}\)", css)
               for n in range(5)))
     check("Back: Pinyin line is a separate field, not ruby",
-          "{{#Pinyin}}" in back and "ruby" not in back)
+          "{{#Pinyin}}" in back and "ruby" not in re.sub(
+              r"<!--.*?-->|/\*.*?\*/", "", back, flags=re.S))
     # --- 6c. Listening mode invariants ---
     check("Front: listening markup gated behind Definition/Extended/Frequency absence",
           re.search(r"\{\{\^Frequency\}\}[\s\S]*?\{\{#Sentence Audio\}\}\s*<div class=\"listening-view", front) is not None)

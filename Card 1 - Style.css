@@ -4,7 +4,7 @@
  * (Ink Night Dark / Rice Paper Light)
  *
  * Source & documentation: https://github.com/mansourvery-hub/anki-chinese-template
- * Version: v0.1.4 — auto-bumped by finish.sh; matches the GitHub release tag
+ * Version: v0.1.5 — auto-bumped by finish.sh; matches the GitHub release tag
  *
  * Ported from anki-japanese-template. Language deltas vs. the Japanese
  * original: Pinyin replaces furigana (separate field + tone colors, no
@@ -610,6 +610,25 @@
   text-align: center;
   margin: 0.2em 0 0 0;
   overflow-wrap: anywhere;
+}
+
+/* Bracket-reading stack: 字[pinyin] groups render furigana-style — the
+   reading floats small above the character, brackets never display. The
+   hanzi stays first in the DOM so copy-paste and screen readers get
+   character-then-reading order; `order` lifts the gloss visually.
+   em-based so it scales with the phone override (§13) automatically. */
+.pystack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  vertical-align: bottom;
+}
+.pysub {
+  order: -1;
+  font-size: 0.62em;
+  line-height: 1.2;
+  letter-spacing: 0;
 }
 
 /* Frequency badge: 5-star scale & progress track */

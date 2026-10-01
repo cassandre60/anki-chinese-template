@@ -482,7 +482,20 @@
           }
           const span = document.createElement('span');
           span.className = 'tone-' + tone;
-          span.textContent = syllable;
+          /* Bracket readings (字[pinyin]): stack like furigana — the
+             reading renders small above the character, brackets stay in
+             storage only and never display. No <ruby> elements involved. */
+          const bracket = syllable.match(/^([^[\]]+)\[([^\[\]]+)\]$/);
+          if (bracket) {
+            span.classList.add('pystack');
+            span.appendChild(document.createTextNode(bracket[1]));
+            const reading = document.createElement('span');
+            reading.className = 'pysub';
+            reading.textContent = bracket[2];
+            span.appendChild(reading);
+          } else {
+            span.textContent = syllable;
+          }
           target.appendChild(span);
         });
         el.dataset.tonesApplied = '1';
