@@ -7,7 +7,7 @@ task/slice graph, not a todo list (`Build frontend` would not qualify).
 ## Where this repo came from
 
 `anki-chinese-template` is a **language port** of
-[`anki-japanese-template`](https://github.com/mansourvery-hub/anki-japanese-template).
+[`anki-japanese-template`](https://github.com/cassandre60/anki-japanese-template).
 Tasks T1-T17 (the whole front/back/compactor/audioscape/release history) are
 inherited and are COMPLETE by construction — the code came across. They are
 listed here for provenance, not as work.

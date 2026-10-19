@@ -16,3 +16,7 @@ create a new template (with a new folder in /home/mohamed/Desktop/Github), a new
 ---
 
 fix both if you think you can do it safely
+
+---
+
+if the same issue can be seen in the chineese template fix it and push

@@ -4,7 +4,7 @@ A modern, ultra-compact Simplified Chinese sentence-mining note type for Anki.
 Built for dense, information-efficient review on **Desktop (Arch Linux, Qt6)**
 and **Mobile (AnkiDroid, small screens)**.
 
-Ported from [`anki-japanese-template`](https://github.com/mansourvery-hub/anki-japanese-template):
+Ported from [`anki-japanese-template`](https://github.com/cassandre60/anki-japanese-template):
 the front-mode logic, audio delegation, lightbox, truncator, empty-field
 collapse and Mature Word Mode are language-agnostic and came across
 unchanged. The reading subsystem is not — see
@@ -147,7 +147,7 @@ in the Pinyin line now).
 
 **Option 1 — Quick install (recommended):** download
 `anki-chinese-template.apkg` from
-[Releases](https://github.com/mansourvery-hub/anki-chinese-template/releases),
+[Releases](https://github.com/cassandre60/anki-chinese-template/releases),
 import via **File → Import**, then delete the sample cards (the note type is
 retained).
 
@@ -156,7 +156,7 @@ retained).
 only):
 
 ```bash
-git clone https://github.com/mansourvery-hub/anki-chinese-template.git
+git clone https://github.com/cassandre60/anki-chinese-template.git
 cd anki-chinese-template
 python3 sync_to_anki.py    # snapshots live state to backups/, then pushes Front/Back/CSS
 python3 export_apkg.py       # exports + verifies dist/*.apkg from the deck

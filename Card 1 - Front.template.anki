@@ -375,7 +375,9 @@
          Expression) leaves no padded void. Runs before the reveal. */
       try {
         container.querySelectorAll('.sentence-display').forEach((sd) => {
-          if (!sd.textContent || !sd.textContent.trim()) sd.remove();
+          const hasVisualContent = (sd) =>
+            !!sd.querySelector('img, video, audio, source, picture, canvas, svg, iframe, object, embed');
+          if ((!sd.textContent || !sd.textContent.trim()) && !hasVisualContent(sd)) sd.remove();
         });
       } catch (blankErr) {
         console.warn('[Blank Collapse]', blankErr);
