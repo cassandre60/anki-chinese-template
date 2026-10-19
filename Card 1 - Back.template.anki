@@ -250,7 +250,9 @@
          shortcut. Custom template shortcuts only: P (Pinyin), X
          (translation), C (expanded-info toggle). -->
     <div class="shortcut-hints" aria-label="快捷键">
+      {{#Pinyin}}
       <span class="shortcut-item"><kbd>P</kbd> 拼音</span>
+      {{/Pinyin}}
       {{#Translation}}
       <span class="shortcut-item"><kbd>X</kbd> 译文</span>
       {{/Translation}}
