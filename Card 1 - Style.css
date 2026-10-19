@@ -500,6 +500,11 @@
   display: block;
 }
 
+/* Front retrieval purity (PRODUCT.md): hide Anki's reviewer flag on the front card */
+:not(:has(.back-card)) #_flag {
+  display: none !important;
+}
+
 
 /* ==============================================================================
     6. BACK CARD HIERARCHY — target, reading, meaning (Fluid Typography)
