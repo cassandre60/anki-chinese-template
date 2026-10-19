@@ -23,7 +23,7 @@ mechanically verified*. Code implements; tests enforce.
   `Sentence Pinyin`, no `furigana`-style filter. Raw
   `{{edit:Sentence}}` / `{{edit:Expression}}` only. A reading on the front
   would hand over half the answer.
-- Front shows **no UI** beyond the tested Chinese: no tags, badges,
+- Front shows **no UI** beyond the tested Chinese: no tags, badges, flags,
   metadata, labels, or controls (hidden behavioral probes only: cloze trio).
   Normal cards NEVER render or play audio on the front.
 - `R` shortcut is **Anki-owned** (native replay); the template never adds
@@ -171,6 +171,11 @@ mechanically verified*. Code implements; tests enforce.
   blank definition/sentence blocks are removed (front runs after the cloze
   fixup, before the reveal); empty secondary blocks inside More are
   stripped.
+- **No control is rendered unless its backing field/content exists**: audio
+  buttons are gated on their audio field; the More toggle and its section
+  self-remove when no secondary content exists; shortcut hints for `X`/`C`
+  are removed at init when translation/More is absent. A missing field never
+  leaves a dead button or affordance behind.
 - Net rule: no padding, border, or margin may survive an empty field.
 
 ## Tooling / process invariants

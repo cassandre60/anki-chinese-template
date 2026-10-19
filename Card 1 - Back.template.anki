@@ -251,7 +251,9 @@
          (translation), C (expanded-info toggle). -->
     <div class="shortcut-hints" aria-label="快捷键">
       <span class="shortcut-item"><kbd>P</kbd> 拼音</span>
+      {{#Translation}}
       <span class="shortcut-item"><kbd>X</kbd> 译文</span>
+      {{/Translation}}
       <span class="shortcut-item"><kbd>C</kbd> 展开</span>
     </div>
 
@@ -593,6 +595,19 @@
         document.querySelectorAll('.translation-box, .revealed-static').forEach(function(el) {
           if (!el.textContent || !el.textContent.trim()) el.remove();
         });
+      } catch (e) { /* keep default rendering */ }
+      /* Principle: no control is shown unless its backing content exists. */
+      try {
+        if (!document.querySelector('.translation-box, .revealed-static')) {
+          document.querySelectorAll('.shortcut-item').forEach(function(el) {
+            if (el.textContent.indexOf('译文') !== -1) el.remove();
+          });
+        }
+        if (!document.querySelector('.more-toggle')) {
+          document.querySelectorAll('.shortcut-item').forEach(function(el) {
+            if (el.textContent.indexOf('展开') !== -1) el.remove();
+          });
+        }
       } catch (e) { /* keep default rendering */ }
     };
 
