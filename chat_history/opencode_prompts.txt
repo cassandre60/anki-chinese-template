@@ -46,3 +46,7 @@ Isolate samples now (Recommended)
 ---
 
 5 real cards (Recommended)
+
+---
+
+Release v0.1.9 now (Recommended)
