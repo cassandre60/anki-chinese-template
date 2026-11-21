@@ -26,6 +26,7 @@ Tooling (stdlib-only): fetch_anki_fields.py · sync_to_anki.py ·
                        bootstrap_chinese_model.py (one-shot, create-only)
                        set_field_descriptions.py (idempotent)
                        seed_sample_cards.py (one-shot, create-only)
+                       isolate_sample_notes.py (one-shot, idempotent)
 ```
 
 ## Components
@@ -185,21 +186,27 @@ fetch_anki_fields.py → .anki_fields.json (gitignored, read-only dump)
 bootstrap_chinese_model.py → one-shot: createModel + createDeck (refuses to re-run)
 set_field_descriptions.py  → idempotent: writes the Fields-dialog descriptions
 sync_to_anki.py      → snapshot backups/<ts>/, push Front/Back/CSS
-seed_sample_cards.py  → 3 sample notes so the deck (and the apkg) is non-empty
-export_apkg.py         → exportPackage deck → dist/*.apkg, then RE-OPEN
-                        the zip, read `collection.anki21`, and assert the
-                        note type, deck and note count (hard gate;
-                        ADR 009). In `--release` mode it also asserts every
-                        note carries `anki-chinese-template-sample`, so a
-                        release never ships real study cards. Refuses to
-                        export an empty deck, which would silently produce a
-                        package with no note type.
+seed_sample_cards.py  → 3 sample notes in the dedicated sample deck
+                        `My Life Decks::Chinese::anki-chinese-template`
+isolate_sample_notes.py → one-shot: create the sample deck + move every
+                        `anki-chinese-template-sample` note into it (the
+                        release source; never the study deck)
+export_apkg.py         → exportPackage the SAMPLE deck → dist/*.apkg, then
+                        RE-OPEN the zip, read `collection.anki21`, and
+                        assert the note type, sample deck and note count
+                        (hard gate; ADR 009). In `--release` mode it also
+                        asserts every note carries
+                        `anki-chinese-template-sample`, so a release never
+                        ships real study cards. Refuses to export an empty
+                        deck, which would silently produce a package with no
+                        note type.
 verify               → local quality gate (tests only, no side effects)
 finish.sh            → verify → stamp → sync → export → commit → push main → release (--target main) → fetch tag
 tests/               → test_compactor.py + test_templates.py
                          + test_front_modes.py + test_mature_content.py
                          + test_pinyin_tones.py + test_layout.py
                          + test_yukei.py + test_back_more.py
+                         + test_readability.py + test_cloze_fallback.py
 ```
 
 Fields are **not** a repo artifact: the Anki UI owns them; agents bootstrap

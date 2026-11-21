@@ -120,10 +120,13 @@ off-screen context to be solvable is a bad mine and should be re-mined.
   falls back to sentence); extensible for future behavior-related tags
   without card redesign.
 - Tooling: `sync_to_anki.py` pushes Front/Back/CSS with a pre-sync snapshot
-  to `backups/<timestamp>/`; `export_apkg.py` exports deck
-  `My Life Decks::Chinese` to `dist/*.apkg` via Anki-Connect and then
+  to `backups/<timestamp>/`; `export_apkg.py` exports the dedicated sample
+  deck `My Life Decks::Chinese::anki-chinese-template` to `dist/*.apkg`
+  via Anki-Connect and then
   **re-opens the written package to confirm it really contains the note
-  type, the deck, and every card** before anything is published;
+  type, the deck, and every card** before anything is published; a full
+  release also requires every note to be sample-tagged, so the study deck
+  is never shipped;
   `finish.sh` runs tests → sync → export → commit → push → release.
   Verification is not paranoia: an empty deck exports as a package with no
   note type in it, and returns success while doing so (ADR 009).

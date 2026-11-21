@@ -6,7 +6,9 @@ Called by finish.sh; can also be run standalone.
 STEP 1 — export, over Anki-Connect `exportPackage`
     The one export action Anki-Connect exposes, and it works: the deck
     limiter is honoured, so the package carries the Chinese note type and
-    only this deck's cards.
+    only the SAMPLE deck's cards. The release source is the dedicated
+    sample deck (`My Life Decks::Chinese::anki-chinese-template`), never
+    the study deck `My Life Decks::Chinese` — see `isolate_sample_notes.py`.
 
 STEP 2 — verify what was actually written
     `exportPackage` returns `True` on success and Anki writes a
@@ -52,7 +54,7 @@ import zipfile
 
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 MODEL_NAME = "Chinese Note type (Sentence card by Default)"
-DECK_NAME = "My Life Decks::Chinese"
+DECK_NAME = "My Life Decks::Chinese::anki-chinese-template"
 SAMPLE_TAG = "anki-chinese-template-sample"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPORT_PATH = os.path.join(SCRIPT_DIR, "dist", "anki-chinese-template.apkg")
@@ -147,8 +149,10 @@ def verify(expected_notes, require_samples=False):
     if MODEL_NAME not in model_names:
         problems.append(
             f"the package does not contain '{MODEL_NAME}' (it has: {model_names})")
-    if not any(name and name.endswith("Chinese") for name in deck_names):
-        problems.append(f"the package does not contain the 'Chinese' deck (it has: {deck_names})")
+    if DECK_NAME not in deck_names:
+        problems.append(
+            f"the package does not contain the sample deck '{DECK_NAME}' "
+            f"(it has: {deck_names})")
     if note_count != expected_notes:
         problems.append(
             f"the package has {note_count} notes, but the deck has {expected_notes} cards")

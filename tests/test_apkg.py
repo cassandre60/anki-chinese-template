@@ -148,6 +148,7 @@ DECKS = {
     "1": {"id": 1, "name": "Default"},
     "2": {"id": 2, "name": "My Life Decks"},
     "3": {"id": 3, "name": "My Life Decks::Chinese"},
+    "4": {"id": 4, "name": export_apkg.DECK_NAME},
 }
 
 
@@ -221,8 +222,8 @@ def main():
     build_package(nodeck, {"1": CHINESE_MODEL}, {"1": {"id": 1, "name": "Default"}},
                   ["a", "b", "c"])
     ok, msg = run_verify(nodeck, 3)
-    check("REJECTS a package without the Chinese deck", ok is False)
-    check("  and says so", "Chinese" in msg, msg)
+    check("REJECTS a package without the sample deck", ok is False)
+    check("  and names the sample deck", export_apkg.DECK_NAME in msg, msg)
 
     # --- 7. Structurally broken file --------------------------------------
     junk = os.path.join(tmp, "junk.apkg")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-shot: seed `My Life Decks::Chinese` with sample cards.
+"""One-shot: seed the dedicated sample deck with sample cards.
 
 Run once, by hand, from the repo root:
 
@@ -10,11 +10,16 @@ WHY THIS EXISTS
 `exportPackage` on an **empty** deck does not export an empty apkg — Anki
 falls back to the Default deck and ships the wrong note types. The release
 notes already tell users to "import the apkg, then delete the sample
-cards", which only works if the deck is non-empty. So the deck ships a
-handful of representative cards.
+cards", which only works if the deck is non-empty. So the sample deck
+ships a handful of representative cards.
 
-They are ordinary notes in the ordinary deck, tagged `anki-chinese-template-sample`
-so `Browse → tag:…` finds them. Delete them any time; the note type and
+They live in a dedicated sample deck
+(`My Life Decks::Chinese::anki-chinese-template`), NOT in the study deck
+`My Life Decks::Chinese`: the release exports the sample deck only, so a
+real study deck can never leak into the artifact. Existing samples still
+sitting in the study deck are moved by `isolate_sample_notes.py`.
+
+They are ordinary notes tagged `anki-chinese-template-sample` so `Browse → tag:…` finds them. Delete them any time; the note type and
 the deck survive.
 
 Each note exercises one real branch of the templates, so a fresh install is
@@ -30,7 +35,7 @@ import urllib.request
 
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 MODEL_NAME = "Chinese Note type (Sentence card by Default)"
-DECK_NAME = "My Life Decks::Chinese"
+DECK_NAME = "My Life Decks::Chinese::anki-chinese-template"
 SAMPLE_TAG = "anki-chinese-template-sample"
 
 GLOSSARY = (
@@ -165,6 +170,11 @@ def main():
         print(f"refusing: {len(existing)} note(s) already carry the {SAMPLE_TAG} tag.")
         print("Delete them in Anki first, or edit this script — re-adding would duplicate.")
         sys.exit(1)
+
+    decks = _anki("deckNames")
+    if DECK_NAME not in decks:
+        _anki("createDeck", deck=DECK_NAME)
+        print(f"created sample deck: {DECK_NAME}")
 
     added = 0
     for note in NOTES:

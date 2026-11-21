@@ -151,10 +151,14 @@ U4 CI-built releases (repo samples; replaces the live-deck export)
   builder, add `release.yml`, and stop `finish.sh` at the tag push. Also
   fixes the current live-deck export, which ships every card in
   `My Life Decks::Chinese` rather than only the
-  `anki-chinese-template-sample` notes. A `--release` tag gate in
-  `export_apkg.py` now blocks publishing a package with non-sample notes
-  (42 of 45 notes in the 2026-11-21 export), so the unsafe release is
-  blocked until samples are isolated or the repo-built path lands.
+  `anki-chinese-template-sample` notes. Interim mitigation is DONE
+  (2026-11-21): the samples were moved into the dedicated deck
+  `My Life Decks::Chinese::anki-chinese-template` (`isolate_sample_notes.py`),
+  `export_apkg.py` now exports that deck only, and its `--release` tag gate
+  blocks any package with a non-sample note; the 2026-11-21 export went
+  from 45 notes (42 real) to 3 sample notes. U4 still needs to make the
+  sample set repo-owned so the release no longer depends on the live
+  collection at all.
 
 ## Roadmap (evolution loop input, not committed scope)
 

@@ -85,7 +85,8 @@ After **every** template/CSS modification, finish with exactly one command:
 
 Chain (stops on first failure): `0.` `./verify` (side-effect-free gate) →
 `1.` version stamp → `2.` `sync_to_anki.py` (pre-sync snapshot to gitignored
-`backups/<timestamp>/`) → `3.` `export_apkg.py` (deck `My Life Decks::Chinese`
+`backups/<timestamp>/`) → `3.` `export_apkg.py` (sample deck
+`My Life Decks::Chinese::anki-chinese-template`
 → gitignored `dist/*.apkg` via `exportPackage`, then **re-opened and
 verified** by reading `collection.anki21`; hard-fails on a mismatch — ADR
 009; full runs add `--release`, which refuses any package containing a
@@ -134,7 +135,8 @@ sense-wrapper selectors, add the fixture first, then the CSS rule, then the
 `Card 1 - Back.template.anki` (hero, Pinyin tones, audio, lightbox) ·
 `Card 1 - Style.css` (themes, layout, tones §9, compactor §6b, truncator §6c) ·
 `fetch_anki_fields.py` · `bootstrap_chinese_model.py` ·
-`set_field_descriptions.py` · `seed_sample_cards.py` · `sync_to_anki.py` ·
+`set_field_descriptions.py` · `seed_sample_cards.py` ·
+`isolate_sample_notes.py` · `sync_to_anki.py` ·
 `export_apkg.py` · `verify` · `finish.sh` · `tests/` (compactor + templates +
 front_modes + mature_content + pinyin_tones + layout + yukei + back_more +
 readability + cloze_fallback + apkg) · `docs/adr/` ·

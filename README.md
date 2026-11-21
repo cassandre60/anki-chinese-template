@@ -167,14 +167,18 @@ The note type and deck must exist first. One-shot, create-only:
 ```bash
 python3 bootstrap_chinese_model.py   # creates the model + "My Life Decks::Chinese"
 python3 set_field_descriptions.py    # idempotent: writes the Fields-dialog text
-python3 seed_sample_cards.py         # 3 sample notes (see below)
+python3 seed_sample_cards.py         # 3 sample notes in the sample deck (see below)
 ```
 
-The deck ships 3 sample notes, tagged `anki-chinese-template-sample`. They
-exist because Anki's exporter degrades to the Default deck when the target
-deck is empty, and because a fresh install should be a smoke test of the
-front modes, the compactor, Pinyin tones and the listening front. Delete
-them any time — the note type and deck survive.
+The sample deck (`My Life Decks::Chinese::anki-chinese-template`) ships 3
+notes tagged `anki-chinese-template-sample`. They exist because Anki's
+exporter degrades to the Default deck when the target deck is empty, and
+because a fresh install should be a smoke test of the front modes, the
+compactor, Pinyin tones and the listening front. Delete them any time —
+the note type and deck survive. The release exports this sample deck only;
+your study deck (`My Life Decks::Chinese`) is never touched. If samples
+still sit in the study deck, move them once with
+`python3 isolate_sample_notes.py`.
 
 > **`export_apkg.py` verifies what Anki wrote.** `exportPackage` returns
 > `True` and writes a structurally valid package in every case, including
@@ -206,7 +210,8 @@ editor (**Tools → Manage Note Types → Cards**).
 ├── set_field_descriptions.py      # Idempotent: writes the field descriptions
 ├── sync_to_anki.py                # Push templates/CSS to Anki (pre-sync backup)
 ├── export_apkg.py                 # Export + verify dist/*.apkg (see ADR 009)
-├── seed_sample_cards.py           # One-shot: 3 sample notes so the deck exports
+├── seed_sample_cards.py           # One-shot: 3 notes in the dedicated sample deck
+├── isolate_sample_notes.py        # One-shot: move sample-tagged notes into the sample deck
 ├── verify                         # Local quality gate (tests only, no side effects)
 ├── finish.sh                      # One command: verify + sync + export + commit + push + release
 ├── PRODUCT.md / MVP.md            # Product intent / current scope

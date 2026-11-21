@@ -38,3 +38,7 @@ before doinganything tell me your findings andrecommandations
 ---
 
 Protect the release first (Recommended)
+
+---
+
+Isolate samples now (Recommended)

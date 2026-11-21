@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-shot bootstrap: create the Chinese note type + sample deck in Anki.
+"""One-shot bootstrap: create the Chinese note type + study deck in Anki.
 
 Run once, by hand, from the repo root:
 
