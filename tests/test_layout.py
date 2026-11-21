@@ -288,6 +288,7 @@ PROBE = """(() => {
     // stacked check (narrow): word bottom above both sides' tops
     r.heroSplit = (lb.right <= wb.left + 2) && (rb.left >= wb.right - 2);
     r.heroStacked = (wb.bottom <= lb.top + 1) && (wb.bottom <= rb.top + 1);
+    r.heroIsLong = hero.classList.contains('is-long');
     if (heroAudio) r.heroAudioSize = heroAudio.getBoundingClientRect().width;
   }
   // Context grid top-anchor: the picture must sit at the grid top no
@@ -387,6 +388,14 @@ def main():
         )
         is not None,
     )
+    check(
+        "CSS: long-hero stacking rule exists (is-long moves sides below the word)",
+        re.search(
+            r"\.hero-header\.is-long\s*\{[^}]*grid-template-areas:\s*\"word word\"\s*\"left right\"",
+            css_early,
+        )
+        is not None,
+    )
     back_early = open(os.path.join(ROOT, "Card 1 - Back.template.anki"), encoding="utf-8").read()
     check(
         "definition key handler supports Space as well as Enter",
@@ -470,6 +479,36 @@ def main():
               back.get("hintsDisplay", "none") != "none",
               f"display={back.get('hintsDisplay')}")
 
+    # ---- Long-hero stacking (real initHeroStacking from the back template) ----
+    _m = re.search(
+        r"window\.initHeroStacking = function\(\) \{.*?\n    \};",
+        open(os.path.join(ROOT, "Card 1 - Back.template.anki"), encoding="utf-8").read(),
+        re.S,
+    )
+    check("long-hero stacking: initHeroStacking extractable from back template", _m is not None)
+    if _m:
+        stack_fn = _m.group(0)
+        long_word = "他每天学习两个小时中文从来没有间断过这句表达很长" * 2
+        hero_long_html = BACK_CARD.replace(
+            '<div class="word-display" id="word">澄明</div>',
+            f'<div class="word-display" id="word">{long_word}</div>',
+        ).replace("__CSS__", css)
+        hero_long_html = hero_long_html.replace(
+            "</body>", f"<script>{stack_fn}\nwindow.initHeroStacking();</script></body>")
+        hero_long = render(hero_long_html, 1440, 900)
+        check("long hero: probe returned", hero_long is not None)
+        if hero_long:
+            check("long hero: marked is-long", hero_long.get("heroIsLong") is True)
+            check("long hero: sides stacked below the word", hero_long.get("heroStacked") is True)
+            check("long hero: no horizontal overflow", not hero_long["hOverflow"])
+        hero_short_html = BACK_CARD.replace("__CSS__", css).replace(
+            "</body>", f"<script>{stack_fn}\nwindow.initHeroStacking();</script></body>")
+        hero_short = render(hero_short_html, 1440, 900)
+        check("short hero: probe returned", hero_short is not None)
+        if hero_short:
+            check("short hero: not marked is-long", hero_short.get("heroIsLong") is False)
+            check("short hero: sides split beside the word", hero_short.get("heroSplit") is True)
+
     # ---- Back card without picture (single column) ----
     nopic_html = re.sub(r'<div class="context-picture">[\s\S]*?</div>\s*</div>', '</div>', BACK_CARD)
     nopic = render(nopic_html.replace("__CSS__", css), 1440, 900)
@@ -507,6 +546,11 @@ def main():
               mob["wrapperH"] < 0.95 * mob["viewportH"],
               f"wrapper={mob['wrapperH']:.0f} viewport={mob['viewportH']}")
         check("mobile back: sentence font stays >= 1rem", mob.get("sentFont", 1) >= 16)
+        # Mobile hierarchy fix: the Expression must dominate the sentence
+        # like on desktop; before this the old slopes left it at ~1.54x.
+        check("mobile back: expression dominates sentence (>= 1.7x)",
+              mob.get("wordFont", 0) >= 1.7 * mob.get("sentFont", 999),
+              f"word={mob.get('wordFont')} sent={mob.get('sentFont')}")
         check("mobile back: keyboard hints hidden (no physical keyboard)",
               mob.get("hintsDisplay", "") == "none",
               f"display={mob.get('hintsDisplay')}")

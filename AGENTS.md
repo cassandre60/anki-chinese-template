@@ -115,7 +115,9 @@ intentionally degrades to the sentence front and makes no network request
 requires usable audio (Policy B: falls back to sentence without it) ·
 compactor targets Chinese structural markup only (no Japanese SC selectors)
 · image-only definitions survive empty-collapse (media counts as content) ·
-muted text AA + 12px chrome-label floor · `:has()` is intentional
+muted text AA + 12px chrome-label floor · long-hero stacking (2+ line
+expression moves side meta below the word) · sentence scale bumped, mobile
+expression ≥1.7x the sentence · `:has()` is intentional
 architecture · no debug badges or verbose labels ·
 all user-facing strings Chinese · vanilla scoped JS resilient to WebView DOM
 re-use.

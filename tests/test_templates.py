@@ -423,6 +423,10 @@ def main():
     check("CSS: hero word never forces horizontal overflow (min-width + anywhere wrap)",
           re.search(r"\.hero-word-wrap\s*\{[^}]*min-width:\s*0", css) is not None
           and re.search(r"\.word-display\s*\{[^}]*overflow-wrap:\s*anywhere", css) is not None)
+    check("Back: long-hero stacking present (initHeroStacking adds is-long)",
+          "window.initHeroStacking = function" in back
+          and "hero.classList.add('is-long')" in back
+          and "window.initHeroStacking();" in back)
     check("CSS: picture fills the parallel row (generous desktop cap, compact mobile cap)",
           "max-height: 44vh" in css
           and "max-height: clamp(24vh, 22vmin, 32vh)" in css

@@ -147,6 +147,15 @@ mechanically verified*. Code implements; tests enforce.
   listening-view is inert until `.listening-mode` activates it.
 - `.hero-word-wrap` is `flex-direction: column` so the headword stacks over
   its Pinyin line; row direction would break the centered reading.
+- **Sentence scale & mobile hierarchy**: `.sentence-chinese` is
+  `clamp(1.25rem, 1.65vw + 0.6rem, 2.05rem)`; the mobile `.word-display`
+  clamp (`2.3rem`–`3.3rem`, `7.4vmin + 1rem`) keeps the Expression
+  dominating the sentence (≥ ~1.7x at 360–500px). The desktop
+  `.word-display` clamp is unchanged.
+- **Long-expression stacking**: `initHeroStacking` (re-run after fonts
+  settle) adds `.hero-header.is-long` when `.word-display` wraps to 2+
+  lines or the side meta spills; frequency/audio then drop below the word
+  instead of squeezing into collapsed `1fr` columns.
 - `--furigana-headroom` is used only as generic vertical clearance
   (definition/sentence top padding and the §6c line math); it is not ruby
   clearance and no rule hides a reading above a line.

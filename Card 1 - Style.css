@@ -566,6 +566,19 @@
   justify-content: flex-start;
 }
 
+/* Long-expression stacking: JS adds .is-long when .word-display wraps to
+   2+ lines (measured line rects). Side meta drops below the word — the same
+   stacked pattern as narrow phones — so frequency/audio never squeeze into
+   collapsed 1fr columns and spill past the card edges. */
+.hero-header.is-long {
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "word word"
+    "left right";
+  row-gap: 1px;
+  column-gap: 8px;
+}
+
 .hero-side .audio-row {
   margin: 0;
 }
@@ -1172,8 +1185,10 @@
    context, not as the loudest element (that is the headword). */
 .sentence-chinese {
   font-family: var(--font-chinese-serif);
-  /* Supporting context: distinctly smaller than the hero headword */
-  font-size: clamp(1.2rem, 1.5vw + 0.6rem, 1.85rem);
+  /* Supporting context: distinctly smaller than the hero headword. Scaled
+     up (~+11% at 1440+ desktop, ~+6% mid-range) so the sentence reads
+     comfortably without competing with the headword. */
+  font-size: clamp(1.25rem, 1.65vw + 0.6rem, 2.05rem);
   /* Hanzi are square and dense; a slightly tighter leading than the
      Japanese original keeps the paragraph rhythm without crowding. */
   line-height: 1.45;
@@ -1532,14 +1547,17 @@
 
   .sentence-display,
   .front-word-display {
-    font-size: clamp(1.1rem, 3.8vmin + 0.5rem, 1.85rem);
+    font-size: clamp(1.15rem, 3.9vmin + 0.55rem, 2rem);
     padding: 4px 6px;
   }
   .sentence-chinese {
-    font-size: clamp(1.1rem, 3.5vmin + 0.5rem, 1.85rem);
+    font-size: clamp(1.15rem, 3.9vmin + 0.55rem, 2rem);
   }
   .word-display {
-    font-size: clamp(1.9rem, 4.5vmin + 1rem, 2.7rem);
+    /* Mobile hierarchy fix: the Expression must dominate the sentence
+       like on desktop (~1.9x at 360-500px; the old 4.5vmin slope made it
+       look like a second sentence at ~1.54x). Desktop clamp untouched. */
+    font-size: clamp(2.3rem, 7.4vmin + 1rem, 3.3rem);
   }
   .pinyin-display {
     font-size: clamp(0.95rem, 1.4vw + 0.6rem, 1.3rem);

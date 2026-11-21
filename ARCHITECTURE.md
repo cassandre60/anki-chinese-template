@@ -109,7 +109,8 @@ card-container
   ├── .scenic-band (photo-derived when Picture exists; aria-hidden
   │    ink-wash pagoda fallback otherwise; click/Enter opens the lightbox)
   ├── .hero-header (3-col grid: left meta | centered word | right meta;
-  │    stacked word-over-sides on phones)
+  │    stacked word-over-sides on phones AND on long expressions via
+  │    `initHeroStacking` → `.is-long`)
   │    ├── .hero-side-left (freq visualizer + 词语 audio)
   │    ├── .hero-word-wrap (column!)
   │    │    ├── .word-display (target — hero element)
@@ -165,7 +166,8 @@ Rice Paper light, plus the `--tone-0..4` palette; no `--freq-*` reuse for
 tones), §2 containers, §3 More toggle, §4 context grid + desktop
 overrides, §5 front type, §5b word-mode swap, **§5c Pinyin line**,
 §6 back hierarchy (hero-header 3-col grid: left meta | centered word |
-right meta; stacked on narrow), **§6b Definition Compactor** (first
+right meta; stacked on narrow; `initHeroStacking` adds `.is-long` when the
+expression wraps to 2+ lines so meta drops below the word), **§6b Definition Compactor** (first
 dictionary, ≤2 senses, no appendices, `.primary-definition`-scoped),
 §6c truncator (3-line cap + fade + chevron), §7 audio rings (playback
 indicator, not true progress), §8 sentence/translation + secondary blocks,
