@@ -119,6 +119,11 @@ mechanically verified*. Code implements; tests enforce.
   `T`), `C` toggles expanded-info; shortcuts never fire in
   inputs/contentEditable. **`R` is Anki-owned** (native replay) and never
   appears in the template's shortcut UI.
+- Every hint in the shortcut bar is a `<button data-shortcut>` routed through
+  `window.applyShortcut` — the same action table the keydown path uses, so a
+  click can never drift from its key. The bar stays visible on phones as
+  ≥44px touch targets (the only way to toggle Pinyin where there is no
+  keyboard).
 - Every circular audio button has an `aria-label`; replay source is a
   **sibling** `.raw-audio-source` (never inside `<button>`, never
   `display:none`); playback delegates to the native replay link; re-tap is

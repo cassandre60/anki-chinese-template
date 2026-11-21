@@ -117,7 +117,8 @@ compactor targets Chinese structural markup only (no Japanese SC selectors)
 · image-only definitions survive empty-collapse (media counts as content) ·
 muted text AA + 12px chrome-label floor · long-hero stacking (2+ line
 expression moves side meta below the word) · sentence scale bumped, mobile
-expression ≥1.7x the sentence · `:has()` is intentional
+expression ≥1.7x the sentence · clickable shortcut hints (P/X/C buttons
+through `applyShortcut`; 44px phone targets) · `:has()` is intentional
 architecture · no debug badges or verbose labels ·
 all user-facing strings Chinese · vanilla scoped JS resilient to WebView DOM
 re-use.
@@ -141,5 +142,5 @@ sense-wrapper selectors, add the fixture first, then the CSS rule, then the
 `isolate_sample_notes.py` · `curate_release_cards.py` · `sync_to_anki.py` ·
 `export_apkg.py` · `verify` · `finish.sh` · `tests/` (compactor + templates +
 front_modes + mature_content + pinyin_tones + layout + yukei + back_more +
-readability + cloze_fallback + apkg) · `docs/adr/` ·
+readability + cloze_fallback + shortcut_clicks + apkg) · `docs/adr/` ·
 `chat_history/` · `dist/` + `backups/` (gitignored).

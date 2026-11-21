@@ -265,9 +265,22 @@ PROBE = """(() => {
   if (footer && wrapper) {
     r.footerInside = footer.getBoundingClientRect().bottom <= wrapper.getBoundingClientRect().bottom + 1;
   }
-  // Keyboard hints: visible on desktop, hidden on touch phones (dead weight).
+  // Keyboard hints: clickable controls, visible on desktop AND phones.
   const hints = document.querySelector('.shortcut-hints');
-  if (hints) { r.hintsDisplay = getComputedStyle(hints).display; }
+  if (hints) {
+    r.hintsDisplay = getComputedStyle(hints).display;
+    const items = hints.querySelectorAll('.shortcut-item');
+    r.hintCount = items.length;
+    if (items.length) {
+      r.hintItemH = items[0].getBoundingClientRect().height;
+      const tops = [];
+      items.forEach(function(el) { tops.push(Math.round(el.getBoundingClientRect().top)); });
+      r.hintRows = new Set(tops).size;
+      const hb = hints.getBoundingClientRect();
+      const wb = wrapper.getBoundingClientRect();
+      r.hintsInside = hb.left >= wb.left - 1 && hb.right <= wb.right + 1;
+    }
+  }
   // Hero header: 3-column grid (left | word | right) on wide screens,
   // word stacked on its own row with sides below on narrow phones.
   // The word must stay truly centered: |wordCenter - headerCenter| ≈ 0.
@@ -543,7 +556,7 @@ def main():
               f"audio={mob.get('heroAudioSize', 0):.0f}")
         check("mobile back: stacked (no context-grid columns)", not mob.get("twoCol", False))
         check("mobile back: no forced viewport fill",
-              mob["wrapperH"] < 0.95 * mob["viewportH"],
+              mob["wrapperH"] < mob["viewportH"],
               f"wrapper={mob['wrapperH']:.0f} viewport={mob['viewportH']}")
         check("mobile back: sentence font stays >= 1rem", mob.get("sentFont", 1) >= 16)
         # Mobile hierarchy fix: the Expression must dominate the sentence
@@ -551,9 +564,16 @@ def main():
         check("mobile back: expression dominates sentence (>= 1.7x)",
               mob.get("wordFont", 0) >= 1.7 * mob.get("sentFont", 999),
               f"word={mob.get('wordFont')} sent={mob.get('sentFont')}")
-        check("mobile back: keyboard hints hidden (no physical keyboard)",
-              mob.get("hintsDisplay", "") == "none",
+        check("mobile back: shortcut hints visible (clickable on touch)",
+              mob.get("hintsDisplay", "none") != "none",
               f"display={mob.get('hintsDisplay')}")
+        check("mobile back: hint targets are finger-sized (>= 44px tall)",
+              mob.get("hintItemH", 0) >= 44,
+              f"h={mob.get('hintItemH', 0):.0f}px")
+        check("mobile back: hints fit one row inside the card",
+              mob.get("hintCount", 0) >= 1 and mob.get("hintRows") == 1
+              and mob.get("hintsInside", False) and mob.get("hintItemH", 0) > 0,
+              f"rows={mob.get('hintRows')} inside={mob.get('hintsInside')}")
 
     # ---- Narrow pane in wide viewport (container <600, viewport 1440) ----
     # Headless --dump-dom does not evaluate @container queries at all

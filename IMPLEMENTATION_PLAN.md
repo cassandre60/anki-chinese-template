@@ -138,13 +138,12 @@ U4 CI-built releases (repo samples; replaces the live-deck export)
     refuses to measure tofu without a Chinese font and its stale Japanese
     fixtures (ruby sentence, `Z` hint, long-sentence replace target) are
     corrected.
-- **U2 — layout/UX.** IN PROGRESS: bigger sentence type + mobile hierarchy
-  (`770f0f7`) and long-hero stacking (`a28dba2`) are DONE (sentence
-  `clamp(1.25rem, 1.65vw + 0.6rem, 2.05rem)`, mobile word
-  `clamp(2.3rem, 7.4vmin + 1rem, 3.3rem)` for ≥1.7x, `initHeroStacking` +
-  `.hero-header.is-long`); clickable shortcut hints (`1151d71`, `5ca387a`,
-  `35bf568`, final state after `5c2016b`) are PENDING — the hint port
-  reverses the current "hide hints on phones" decision.
+- **U2 — layout/UX.** COMPLETE: bigger sentence type + mobile hierarchy
+  (`770f0f7`); long-hero stacking (`a28dba2`); clickable shortcut hints
+  (`1151d71`, `5ca387a`, `35bf568`, final state after `5c2016b`) — the hint
+  bar is now buttons routed through `window.applyShortcut` (P/X/C), visible
+  on phones as ≥44px touch targets, so `P` (hide Pinyin) works without a
+  keyboard.
 - **U3 — wide-card side rails.** NOT STARTED (`ffb0cca` … `32bea79`):
   changes `Picture` from one reference to two rail references (one
   trigger); needs an explicit QUALITY/ADR amendment and a

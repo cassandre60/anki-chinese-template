@@ -139,7 +139,9 @@ colouring** (`applyPinyinTones` → `tone-0..4` spans), definition truncator
 `.is-expanded`), lightbox (backdrop-click / `Escape` close, alt
 preserved), back-only keyboard shortcuts (`P` Pinyin visibility, `T`/`X`
 translation reveal, `C` expanded-info toggle; `R` is Anki-owned, never
-listed).
+listed; every hint is a clickable `<button data-shortcut>` routed through
+the shared `window.applyShortcut` table, visible on phones as ≥44px touch
+targets).
 
 #### Pinyin tone colouring (`applyPinyinTones`)
 
@@ -214,6 +216,7 @@ tests/               → test_compactor.py + test_templates.py
                          + test_pinyin_tones.py + test_layout.py
                          + test_yukei.py + test_back_more.py
                          + test_readability.py + test_cloze_fallback.py
+                         + test_shortcut_clicks.py
 ```
 
 Fields are **not** a repo artifact: the Anki UI owns them; agents bootstrap

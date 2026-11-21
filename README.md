@@ -36,7 +36,9 @@ unchanged. The reading subsystem is not — see
   AnkiDroid. The ring is a playback indicator (a decorative play-pulse), not
   true progress. <kbd>R</kbd> is Anki's own shortcut (native replay) — the
   template never adds it. Custom template shortcuts: <kbd>P</kbd> (Pinyin),
-  <kbd>X</kbd> (translation), <kbd>C</kbd> (expanded-info).
+  <kbd>X</kbd> (translation), <kbd>C</kbd> (expanded-info). Each hint is a
+  clickable button, and the hint bar stays on phones as a ≥44px touch
+  target, so <kbd>P</kbd> still works where there is no keyboard.
 - **👁️ On-demand secondary info** — <kbd>T</kbd>/<kbd>X</kbd> reveals the
   translation; `详情 ▾` exposes the full dictionary definition, extra
   context, hanzi notes and general notes. <kbd>C</kbd> toggles expanded-info.
@@ -245,7 +247,8 @@ pushes, and publishes a tagged release.
 
 `tests/` covers the compactor selectors and their JS mirror, template
 invariants (reading ban on the front, audio/lightbox semantics, balanced
-conditionals, listening Policy B, R-is-Anki-owned, P/X/C shortcuts, Chinese UI
+conditionals, listening Policy B, R-is-Anki-owned, P/X/C shortcuts (keys and
+clickable hints), Chinese UI
 strings), the Pinyin tone controller, front-mode resolver behavior, mature
 content-search fallback (duplicate cards / ambiguity), scenic-band
 photo/fallback consolidation, back-More lazy loading, and headless layout

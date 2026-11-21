@@ -28,6 +28,7 @@ run `./verify`; CI re-runs `./verify` after every push.
 | Lightbox backdrop-only close, dialog semantics, alt | `tests/test_templates.py` §4 |
 | Balanced Anki conditionals | `tests/test_templates.py` §5 |
 | More collapse; P/X/C shortcuts (never R); listening resolver wiring; all UI strings Chinese | `tests/test_templates.py` §§6b–6e |
+| Clickable shortcut hints: every hint is a `<button data-shortcut>` routed through `window.applyShortcut`; keys and clicks share one action table; phone targets ≥44px | `tests/test_shortcut_clicks.py` — extracts the real functions and runs 7+ headless Chrome cases (P/X/C clicks, inner-`<kbd>` delegation, C isolation, bare-card degradation) |
 | Pinyin line: separate field, no ruby, `P` toggle hides both lines with `display:none` | `tests/test_templates.py` §6b (new) |
 | Pinyin tone colouring: controller + table present, all five `--tone-*` classes styled | `tests/test_templates.py` §6b (new) |
 | `:focus-visible`, reduced motion, content-driven sizing, context-grid fallback, clamp() authority, no JS font override | `tests/test_templates.py` §§6–7 |
@@ -83,6 +84,7 @@ scaffolding that the Japanese repo already had:
 - `test_pinyin_tones.py`: headless Chrome if present, else skip (pass).
 - `test_layout.py`: headless Chrome if present, else skip (pass).
 - `test_back_more.py`: headless Chrome if present, else skip (pass).
+- `test_shortcut_clicks.py`: headless Chrome if present, else skip (pass).
 - `test_yukei.py`: stdlib only; headless Chrome optional for browser probes.
 - `test_readability.py`: stdlib only (parses the real stylesheet).
 - `test_apkg.py`: stdlib only (no Anki needed — exercises `export_apkg.py`'s
