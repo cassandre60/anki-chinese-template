@@ -22,10 +22,14 @@ echo "==> verify: compactor regression tests"
 python3 tests/test_compactor.py
 echo "==> verify: scenic-band contracts (ADR 005/006)"
 python3 tests/test_yukei.py
+echo "==> verify: readability (muted-text contrast, 12px chrome-label floor)"
+python3 tests/test_readability.py
 echo "==> verify: template structural invariants"
 python3 tests/test_templates.py
 echo "==> verify: front-mode resolver behavior (listening semantics)"
 python3 tests/test_front_modes.py
+echo "==> verify: cloze-fallback sentence preservation (headless Chrome, skipped gracefully without Chrome)"
+python3 tests/test_cloze_fallback.py
 echo "==> verify: mature content-search fallback (duplicate cards / ambiguity)"
 python3 tests/test_mature_content.py
 echo "==> verify: Pinyin tone coloring (headless Chrome, skipped gracefully without Chrome)"

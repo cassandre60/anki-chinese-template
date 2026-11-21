@@ -13,8 +13,12 @@
          view so exactly one listening button is ever visible.
        - Cloze Fallback: Sentence without a bold term (mobile
          exports) is rebuilt in JS from cloze-prefix + <b>cloze-body</b>
-         + cloze-suffix when all three are non-empty; otherwise the
-         usual sentence is kept untouched.
+         + cloze-suffix when all three are non-empty. If the rendered
+         sentence already contains the trio, the cloze-body occurrence is
+         highlighted in place — a fuller sentence (e.g. a Yomitan card
+         whose Sentence has no <b> but carries the whole context) is never
+         replaced by a cloze fragment, and the target is never left
+         unmarked.
        - Frequency legacy: No definitions but Frequency present (old cards with deleted glosses) → usual sentence, never the audio button.
        - Fallback: Shows Sentence / Expression if both definitions and audio are missing.
 - Mature Word Mode (desktop only): If the card interval >= LONG_INTERVAL_DAYS
@@ -336,11 +340,17 @@
       const safetyTimeout = setTimeout(reveal, 1200);
 
       /* --- CLOZE FALLBACK (BEGIN — headless check extracts this block verbatim) ---
-         mobile mining exports often carry a Sentence with no <b>
-         target term. When the rendered sentence has no bold element but
-         the cloze trio (prefix/body/suffix) is complete, rebuild it as
+         Mobile mining exports (jidoujisho) often carry a Sentence with no
+         <b> target term. When the rendered sentence has no bold element
+         but the cloze trio (prefix/body/suffix) is complete, rebuild it as
          prefix + <b>body</b> + suffix so the front is indistinguishable
          from a proper Yomitan sentence (same .sentence-display b styling).
+         NEVER replace a fuller sentence: Yomitan stores only a short
+         context window in the cloze fields, so when the trio is already
+         contained in the rendered sentence, that sentence is the richer
+         content and is kept intact — but the target term is still
+         highlighted in place (e.g. 说实话，他每天学习两个小时中文，从来没有
+         间断过。where the Sentence carries an extra "说实话，" clause).
          Any gap or failure keeps the original sentence untouched. */
       try {
         const probe = container.querySelector('.cloze-probe');
@@ -351,9 +361,68 @@
         const clozePre = probeText('.cloze-pre');
         const clozeMid = probeText('.cloze-mid');
         const clozeSuf = probeText('.cloze-suf');
+
+        /* Highlight an already-contained target in place: locate the full
+           trio in the sentence's text nodes first (so a term that occurs
+           more than once is matched where the cloze fields describe it),
+           then wrap only the body's character range in <b>. Whitespace is
+           ignored for matching because Sentence and cloze fields often
+           space clauses differently, but the range keeps the original
+           spacing. Never throws, never removes content. */
+        const boldTermInPlace = (sd) => {
+          const strip = (s) => s.replace(/\s+/g, '');
+          const preN = strip(clozePre);
+          const midN = strip(clozeMid);
+          const sufN = strip(clozeSuf);
+          if (!midN) return false;
+          const walker = document.createTreeWalker(sd, NodeFilter.SHOW_TEXT, null);
+          const chars = [];
+          let node;
+          while ((node = walker.nextNode())) {
+            const text = node.nodeValue || '';
+            for (let i = 0; i < text.length; i++) {
+              if (/\s/.test(text[i])) continue;
+              chars.push({ node: node, offset: i });
+            }
+          }
+          const flat = chars
+            .map((c) => c.node.nodeValue[c.offset])
+            .join('');
+          let at = flat.indexOf(preN + midN + sufN);
+          if (at >= 0) {
+            at += preN.length;
+          } else {
+            at = flat.indexOf(midN);
+          }
+          if (at < 0) return false;
+          const start = chars[at];
+          const end = chars[at + midN.length - 1];
+          if (!start || !end) return false;
+          try {
+            const range = document.createRange();
+            range.setStart(start.node, start.offset);
+            range.setEnd(end.node, end.offset + 1);
+            const bold = document.createElement('b');
+            bold.appendChild(range.extractContents());
+            range.insertNode(bold);
+            return true;
+          } catch (boldErr) {
+            return false;
+          }
+        };
+
         if (clozePre && clozeMid && clozeSuf) {
           container.querySelectorAll('.sentence-display').forEach((sd) => {
             if (!sd.querySelector('b, strong')) {
+              /* Whitespace-insensitive containment: <br> contributes
+                 nothing to textContent and field spacing can differ, so
+                 compare with all whitespace stripped on both sides. */
+              const sentText = (sd.textContent || '').replace(/\s+/g, '');
+              const trioText = (clozePre + clozeMid + clozeSuf).replace(/\s+/g, '');
+              if (sentText.includes(trioText)) {
+                boldTermInPlace(sd);
+                return;
+              }
               sd.textContent = '';
               const bold = document.createElement('b');
               bold.textContent = clozeMid;

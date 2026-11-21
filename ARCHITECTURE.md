@@ -47,7 +47,8 @@ Sentence Audio? ──yes──→ listening-view (audio-only card)
 sentence-display fallback
         │
 cloze fixup: Sentence has no <b> AND cloze trio complete?
-        │ yes → prefix + <b>body</b> + suffix
+        │ yes, trio already contained → highlight body in place (<b>, no swap)
+        │ yes, not contained          → prefix + <b>body</b> + suffix
         │
 Mature check (desktop only; not listening, Expression non-empty,
               interval ≥ LONG_INTERVAL_DAYS=365)?
@@ -88,9 +89,10 @@ Browse previewer now share the identical code path):
   before any fetch (refused localhost requests surface natively as false
   "Failed to load" media warnings); interval stays null → sentence front.
 Anti-flash gate (`visibility:hidden` → reveal, 1200 ms safety cap); blank
-sentence blocks are removed after the cloze fixup. The gate is
-deterministic and safe: it never depends on a single async path or timer
-that can be throttled. See `docs/adr/001-*`.
+sentence blocks are removed after the cloze fixup, while image-only
+definition/secondary blocks are kept (media counts as content, see
+`hasVisualContent`). The gate is deterministic and safe: it never depends
+on a single async path or timer that can be throttled. See `docs/adr/001-*`.
 
 `:has()` is intentional architecture for empty-shell collapse (§6b, §10);
 it is not removed for theoretical portability. Front template size is not

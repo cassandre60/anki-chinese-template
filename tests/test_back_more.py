@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Back More-section lazy extended definition + prune behavior tests.
 
-Extracts toggleMore / initSecondarySection / pruneCompactedGlossary verbatim
-from the real `Card 1 - Back.template.anki` and runs them in headless Chrome:
+Extracts toggleMore / initSecondarySection / prepareDefinitionBoxes /
+initDefinitionTruncation / pruneCompactedGlossary verbatim from the real
+`Card 1 - Back.template.anki` and runs them in headless Chrome:
 
   1. lazy: template content stays out of the DOM until first More open,
      then stamps into its host exactly once.
@@ -10,6 +11,10 @@ from the real `Card 1 - Back.template.anki` and runs them in headless Chrome:
   3. cleanup removes More + toggle when the section is truly empty.
   4. prune: fixture glossary compacts to the same visible text as CSS §6b
      (2 senses kept, 3rd+ hidden) while shrinking the live DOM.
+  5. image-only definition survives empty-collapse and is marked
+     media-only (regression: a pasted folding-guide image was deleted).
+  6. text definition keeps the normal truncation path.
+  7. image-only secondary content keeps More alive.
 
 Run directly:  python3 tests/test_back_more.py
 Wired into ./verify alongside the other suites. Skipped gracefully
@@ -44,11 +49,13 @@ def check(name, cond, detail=""):
 
 
 def load_functions():
-    """Extract the three window.* functions verbatim from the back template."""
+    """Extract the window.* functions verbatim from the back template."""
     with open(BACK, encoding="utf-8") as f:
         back = f.read()
     funcs = {}
-    for name in ("toggleMore", "initSecondarySection", "pruneCompactedGlossary"):
+    for name in ("toggleMore", "initSecondarySection", "pruneCompactedGlossary",
+                 "hasVisualContent", "prepareDefinitionBoxes",
+                 "initDefinitionTruncation"):
         m = re.search(r"window\.%s = function.*?^\s{4}\};" % name, back, re.S | re.M)
         if not m:
             raise RuntimeError(f"{name} not found in back template")
@@ -69,8 +76,12 @@ try {{
 {funcs['toggleMore']}
 {funcs['initSecondarySection']}
 {funcs['pruneCompactedGlossary']}
+{funcs['hasVisualContent']}
+{funcs['prepareDefinitionBoxes']}
+{funcs['initDefinitionTruncation']}
 window.initSecondarySection();
 window.pruneCompactedGlossary();
+window.initDefinitionTruncation();
 var section = document.querySelector('.more-section');
 var btn = document.querySelector('.more-toggle');
 report.moreAlive = !!(section && section.parentNode);
@@ -84,6 +95,10 @@ report.stamped = host2 ? host2.textContent : null;
 report.tplGone = document.querySelector('template.extended-full-tpl') === null;
 report.expanded = btn ? btn.getAttribute('aria-expanded') : null;
 var def = document.querySelector('.primary-definition');
+report.defAlive = !!(def && def.parentNode);
+report.defMediaOnly = def ? def.classList.contains('is-media-only') : false;
+report.defRole = def ? def.getAttribute('role') : null;
+report.defTabindex = def ? def.getAttribute('tabindex') : null;
 report.defText = def ? def.textContent : '';
 report.defNodes = def ? def.querySelectorAll('*').length : -1;
 if (btn && report.moreAlive) window.toggleMore(btn);
@@ -171,6 +186,39 @@ def main():
         check("prune: forms + attribution gone", "present" not in t and "CC BY-SA" not in t, t[:120])
         check("prune: sub-entry gone", "学习者" not in t, t[:120])
         check("prune: live DOM shrunk (< 40 nodes)", 0 < r.get("defNodes", 9999) < 40, str(r.get("defNodes")))
+
+    # Case 5: image-only definition (a pasted folding guide) is content, not
+    # a blank shell. Regression: a textContent-only emptiness check deleted
+    # the <img>.
+    r = render(build_html(
+        funcs,
+        '<div class="html-content secondary-block">ctx</div>',
+        '<img alt="饺子包法" src="fit.webp">'))
+    check("image-only definition: probe returned", r is not None)
+    if r:
+        check("image-only definition: box survives", r.get("defAlive") is True, str(r))
+        check("image-only definition: marked media-only", r.get("defMediaOnly") is True, str(r))
+        check("image-only definition: text-expand affordance removed",
+              r.get("defRole") is None and r.get("defTabindex") is None, str(r))
+
+    # Case 6: text definition keeps the normal truncation path.
+    r = render(build_html(
+        funcs,
+        '<div class="html-content secondary-block">ctx</div>',
+        '<div>把水澄清；使心情平静</div>'))
+    check("text definition: probe returned", r is not None)
+    if r:
+        check("text definition: survives and is not media-only",
+              r.get("defAlive") is True and r.get("defMediaOnly") is False, str(r))
+
+    # Case 7: image-only secondary block is content too (More must survive).
+    r = render(build_html(
+        funcs,
+        '<div class="html-content secondary-block"><img alt="" src="notes.webp"></div>'))
+    check("image-only More block: probe returned", r is not None)
+    if r:
+        check("image-only More block: section + toggle survive",
+              r.get("moreAlive") is True and r.get("btnAlive") is True, str(r))
 
     print()
     print(f"{PASS} passed, {FAIL} failed")

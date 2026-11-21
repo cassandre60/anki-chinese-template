@@ -8,7 +8,7 @@ invariants that pure text tests cannot catch:
   - card height is content-driven (back card < 90% of viewport height
     on a rich desktop card, i.e. no viewport fill)
   - no horizontal overflow / clipping
-  - furigana (rt) never overlaps the line above it
+  - the Pinyin line sits under the headword, never beside it or spilling
   - hierarchy: headword font > sentence font > definition font > notes
   - truncator: a long definition clamps at 3 lines until expanded
   - listening front keeps the audio button a comfortable target
@@ -43,6 +43,29 @@ def check(name, cond, detail=""):
         PASS += 1
     else:
         FAIL += 1
+
+
+def chinese_font_available():
+    """Whether fontconfig can supply a Chinese font (None if unqueryable).
+
+    Layout probes measure painted CJK boxes. Without a Chinese font each
+    glyph becomes a tofu box with fallback metrics, so the wrap/height
+    probes certify a layout no real reviewer ever sees. Refuse to run
+    rather than certify tofu.
+    """
+    if not shutil.which("fc-list"):
+        return None
+    try:
+        out = subprocess.run(
+            ["fc-list", ":lang=zh"],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return bool(out.stdout.strip())
 
 
 # ---------------------------------------------------------------- HTML fixture
@@ -90,7 +113,7 @@ __CSS__
         </ul><ul data-sc-content="forms"><li>supplementary (hidden)</li></ul></li>
       </ol></div>
       <!-- Font-independent overflow guarantee: CI runners have Chrome but
-           no CJK fonts, so the Japanese text above renders with fallback
+           no CJK fonts, so the Chinese text above renders with fallback
            tofu metrics and may fit within the 3-line cap. The fixed-height
            spacer makes scrollHeight > clientHeight true in EVERY
            environment, so the truncator checks never depend on font
@@ -107,14 +130,14 @@ __CSS__
       </div>
     </div>
     <div class="more-section" hidden>
-      <div class="translation-box"><div class="translation-hint">Translation</div>
+      <div class="translation-box"><div class="translation-hint">译文</div>
         <div class="translation-text">To clear one's mind and listen to music.</div></div>
       <div class="html-content secondary-block">Additional context paragraph.</div>
-      <div class="html-content secondary-block">漢字のメモ: 澗 — radical 水.</div>
+      <div class="html-content secondary-block">汉字笔记: 氵部 — 与水有关.</div>
       <div class="html-content secondary-block extended-full">Full extended definition text that stays untruncated.</div>
     </div>
     <button type="button" class="more-toggle" aria-expanded="false">More <span class="more-caret">▾</span></button>
-    <div class="shortcut-hints"><span class="shortcut-item"><kbd>Z</kbd> hints</span></div>
+    <div class="shortcut-hints"><span class="shortcut-item"><kbd>P</kbd> hints</span></div>
     <div class="source-footer">SOURCE — some novel</div>
   </div>
 </div>
@@ -138,7 +161,7 @@ FRONT_SENTENCE = """<!doctype html><html><head><meta charset="utf-8">
 <style>__CSS__</style></head><body>
 <div class="card"><div class="card-wrapper">
   <div class="card-container">
-    <div class="sentence-display" id="sent">彼は<b>約束</b>を<ruby>守<rt>まも</rt></ruby>らなかった。</div>
+    <div class="sentence-display" id="sent">他昨晚<b>练习</b>了两个小时中文。</div>
   </div>
 </div></div>
 </body></html>"""
@@ -376,6 +399,20 @@ def main():
     if not CHROME:
         print("[SKIP] no headless Chrome found — layout checks skipped")
         return 0 if FAIL == 0 else 1
+    has_chinese_font = chinese_font_available()
+    if has_chinese_font is False:
+        print(
+            "[FAIL] no Chinese font installed — layout probes would measure "
+            "tofu metrics instead of glyphs\n"
+            "       install one (Arch: noto-fonts-cjk, "
+            "Debian/Ubuntu: fonts-noto-cjk)"
+        )
+        return 1
+    if has_chinese_font is None:
+        print(
+            "[WARN] fontconfig unavailable (fc-list missing) — cannot confirm "
+            "a Chinese font is installed"
+        )
     css = css_early
     # Headless virtual-time freezes the card entrance animations
     # (fadeInUp `both` fill) mid-flight, shifting measured Y positions by
@@ -443,8 +480,8 @@ def main():
 
     # ---- Long sentence: picture stays top-anchored, never dragged down ----
     long_html = BACK_CARD.replace(
-        "長い文章が二行に折り返される場合の検証も兼ねている。",
-        "長い文章が二行に折り返される場合の検証も兼ねている。" * 30)
+        "这句话写得足够长,会折成两行,用来顺便验证换行的情况。",
+        "这句话写得足够长,会折成两行,用来顺便验证换行的情况。" * 30)
     longcard = render(long_html.replace("__CSS__", css), 1440, 900)
     check("desktop back (long sentence): probe returned", longcard is not None)
     if longcard:

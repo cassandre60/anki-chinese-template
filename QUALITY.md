@@ -69,7 +69,10 @@ mechanically verified*. Code implements; tests enforce.
   deterministic and safe: it must never depend on a single async path or
   timer that can be throttled, and it must never leave a blank/hung card.
 - Cloze rebuild fires only when Sentence lacks `<b>`/`<strong>` **and** the
-  full prefix/body/suffix trio is non-empty; rebuild uses `<b>`.
+  full prefix/body/suffix trio is non-empty. A fuller sentence that already
+  contains the trio is never replaced by a cloze fragment of itself
+  (Yomitan cloze fields hold only a context window); its cloze-body target
+  is highlighted in place with `<b>` instead. Rebuild uses `<b>`.
 - The template contains **no executable AnkiDroid JS API code** and makes no
   `/jsapi/` request; mobile Mature Word Mode is intentionally disabled and
   degrades to the sentence front.
@@ -157,6 +160,11 @@ mechanically verified*. Code implements; tests enforce.
 - Accent color is reserved for target highlighting and interactive
   states; frequency indicator uses semantic tier colors (--freq-*); tone
   coloring uses the separate --tone-* palette.
+- **Readability floor**: muted text meets WCAG AA (4.5:1) on the card
+  background in both themes; the shortcut-hint bar and source footer carry
+  no opacity multiplier (opacity re-lowers the effective contrast); the
+  smallest chrome labels (frequency stars, shortcut items, small audio
+  label) never drop below 12px at any width.
 
 ## Empty-field collapse (space discipline)
 
@@ -170,7 +178,9 @@ mechanically verified*. Code implements; tests enforce.
 - Degenerate content removes itself instead of leaving chrome behind:
   blank definition/sentence blocks are removed (front runs after the cloze
   fixup, before the reveal); empty secondary blocks inside More are
-  stripped.
+  stripped. **Media counts as content**: an image-only definition or
+  secondary block survives (marked `.is-media-only`, which escapes the
+  3-line prose cap), so a pasted folding-guide image is never deleted.
 - **No control is rendered unless its backing field/content exists**: audio
   buttons are gated on their audio field; the More toggle and its section
   self-remove when no secondary content exists; shortcut hints for `X`/`C`

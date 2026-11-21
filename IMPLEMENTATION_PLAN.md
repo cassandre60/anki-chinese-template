@@ -14,7 +14,7 @@ listed here for provenance, not as work.
 
 The **port** is a separate, short graph below. Only its nodes are open work.
 
-## Port task graph (the only open work)
+## Port task graph (complete)
 
 ```text
                   ┌──────────────────────────┐
@@ -110,6 +110,48 @@ parallelizable; P3 must follow P2 (the Pinyin rules need the markup).
   exports and then re-reads `collection.anki21` to assert the note type,
   deck, and card count, with `tests/test_apkg.py` pinning both the correct
   path and the five failure modes it must reject. Status: COMPLETE.
+
+## Upstream sync (from anki-japanese-template, 2026-11-21)
+
+The Japanese repo's language-agnostic work after the 2026-09-30 port is
+being imported in priority tiers. Only U1 is in scope now; U2–U4 are
+recorded so a later agent can pick them up without re-reviewing the
+Japanese history.
+
+```text
+U1 correctness + readability   ← COMPLETE
+U2 layout/UX (sentence scale, long-hero stacking, clickable hints)
+U3 wide-card side rails (changes the single-Picture invariant)
+U4 CI-built releases (repo samples; replaces the live-deck export)
+```
+
+- **U1 — correctness + readability.** COMPLETE:
+  - cloze: an already-contained trio is highlighted in place, never
+    replaced by a fragment (Japanese `7e5f915` + `3ab46f7`); new
+    `tests/test_cloze_fallback.py`.
+  - image-only definitions/secondary content survive empty-collapse
+    (`ece31e9`); `tests/test_back_more.py` cases 5–7, CSS
+    `.is-media-only`.
+  - readability floor: AA muted text, no hint/footer opacity, 12px
+    chrome-label floor (`5c2016b`); new `tests/test_readability.py`.
+  - test hygiene: `verify.yml` installs CJK fonts; `test_layout.py`
+    refuses to measure tofu without a Chinese font and its stale Japanese
+    fixtures (ruby sentence, `Z` hint, long-sentence replace target) are
+    corrected.
+- **U2 — layout/UX.** NOT STARTED: bigger sentence type + mobile hierarchy
+  (`770f0f7`); long-hero stacking (`a28dba2`); clickable shortcut hints
+  (`1151d71`, `5ca387a`, `35bf568`, final state after `5c2016b`) — the
+  hint port reverses the current "hide hints on phones" decision.
+- **U3 — wide-card side rails.** NOT STARTED (`ffb0cca` … `32bea79`):
+  changes `Picture` from one reference to two rail references (one
+  trigger); needs an explicit QUALITY/ADR amendment and a
+  desktop/narrow/mobile visual review. Adapt the pagoda fallback.
+- **U4 — CI-built releases.** NOT STARTED (`0b3676b` … `83bf26b`): commit
+  Chinese sample fixtures (`fetch_sample_deck.py` adapted) and a stdlib
+  builder, add `release.yml`, and stop `finish.sh` at the tag push. Also
+  fixes the current live-deck export, which ships every card in
+  `My Life Decks::Chinese` rather than only the
+  `anki-chinese-template-sample` notes.
 
 ## Roadmap (evolution loop input, not committed scope)
 

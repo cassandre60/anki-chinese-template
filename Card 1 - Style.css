@@ -39,7 +39,7 @@
   --card-border: rgba(255, 255, 255, 0.06);
   --text-primary: #e8edf5;
   --text-secondary: #8b99b0;
-  --text-muted: #5a687d;
+  --text-muted: #77869d;
   
   --accent-color: #e07a5f;
   --accent-light: rgba(224, 122, 95, 0.10);
@@ -125,7 +125,7 @@
   --card-border: rgba(0, 0, 0, 0.06);
   --text-primary: #1a1c20;
   --text-secondary: #515a6b;
-  --text-muted: #8a909d;
+  --text-muted: #6b7280;
   
   --accent-color: #b84a39;
   --accent-light: rgba(184, 74, 57, 0.08);
@@ -172,7 +172,7 @@
   --card-border: rgba(255, 255, 255, 0.06);
   --text-primary: #e8edf5;
   --text-secondary: #8b99b0;
-  --text-muted: #5a687d;
+  --text-muted: #77869d;
   --accent-color: #e07a5f;
   --accent-light: rgba(224, 122, 95, 0.10);
   --accent-soft: rgba(224, 122, 95, 0.20);
@@ -679,8 +679,10 @@
   transition: width 0.3s ease;
 }
 
+/* Chrome-label floor: frequency stars, P/X/C labels, and the small audio
+   label stay at 12px; the mobile block must not down-scale them. */
 .frequency-stars {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
   line-height: 1;
 }
@@ -964,6 +966,26 @@
 .definition-box.primary-definition.is-expanded {
   max-height: none;
   cursor: default;
+}
+
+/* Media-only definition (a pasted image with no glossary text): the 3-line
+   prose cap would clip it to a meaningless strip, so let the image size the
+   box. Bounded by the card width and a generous viewport cap. */
+.definition-box.primary-definition.is-media-only {
+  max-height: none;
+  cursor: default;
+}
+
+.definition-box.primary-definition img,
+.definition-box.primary-definition video,
+.definition-box.primary-definition picture {
+  display: block;
+  max-width: 100%;
+  max-height: min(52vh, 480px);
+  width: auto;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--border-radius-sm);
 }
 
 /* Overflow confirmed by JS: clickable affordance */
@@ -1389,20 +1411,14 @@
   gap: 12px;
   margin: clamp(6px, 1vh, 12px) auto 4px auto;
   padding: 6px 12px;
-  opacity: 0.55;
-  transition: opacity 0.2s ease;
   user-select: none;
-}
-
-.shortcut-hints:hover {
-  opacity: 0.95;
 }
 
 .shortcut-item {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -1436,7 +1452,6 @@
   color: var(--text-muted);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  opacity: 0.7;
 }
 
 /* Source lives inside .more-section (hidden by default, revealed via
@@ -1559,10 +1574,6 @@
     width: 24px;
   }
 
-  .frequency-stars {
-    font-size: 0.62rem;
-  }
-
   .context-grid:has(.context-picture) {
     flex-direction: column;
     gap: 8px;
@@ -1584,10 +1595,6 @@
   .small-audio-btn {
     width: 32px;
     height: 32px;
-  }
-
-  .small-audio-btn .audio-btn-label {
-    font-size: 0.66rem;
   }
 
   .more-toggle {
@@ -1616,10 +1623,6 @@
      The -18px drift is imperceptible during a 5-10s review on 412px. */
   .scenic-cloud {
     animation: none !important;
-  }
-
-  .shortcut-item {
-    font-size: 0.65rem;
   }
 }
 

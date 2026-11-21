@@ -112,7 +112,9 @@ intentionally degrades to the sentence front and makes no network request
 (`post` UA-guard), listening untouched, anti-flash gate) · `#listening`
 requires usable audio (Policy B: falls back to sentence without it) ·
 compactor targets Chinese structural markup only (no Japanese SC selectors)
-· `:has()` is intentional architecture · no debug badges or verbose labels ·
+· image-only definitions survive empty-collapse (media counts as content) ·
+muted text AA + 12px chrome-label floor · `:has()` is intentional
+architecture · no debug badges or verbose labels ·
 all user-facing strings Chinese · vanilla scoped JS resilient to WebView DOM
 re-use.
 
@@ -134,5 +136,5 @@ sense-wrapper selectors, add the fixture first, then the CSS rule, then the
 `set_field_descriptions.py` · `seed_sample_cards.py` · `sync_to_anki.py` ·
 `export_apkg.py` · `verify` · `finish.sh` · `tests/` (compactor + templates +
 front_modes + mature_content + pinyin_tones + layout + yukei + back_more +
-apkg) · `docs/adr/` ·
+readability + cloze_fallback + apkg) · `docs/adr/` ·
 `chat_history/` · `dist/` + `backups/` (gitignored).

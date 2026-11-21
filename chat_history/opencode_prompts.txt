@@ -28,3 +28,9 @@ fix these: flags should not deplay in front card; if something is missing (say a
 ---
 
 flags should not display in front card
+
+---
+
+review recent commits
+anywork that you transposrt to chinaease template we need toimport to it
+before doinganything tell me your findings andrecommandations

@@ -22,7 +22,8 @@ run `./verify`; CI re-runs `./verify` after every push.
 | Compactor keeps 1st dictionary, ≤2 senses, no appendices; extended definition untouched; rules scoped to `.primary-definition`; no Japanese SC selectors; JS prune mirrors the CSS 1:1 | `tests/test_compactor.py` — extracts the real `display:none` rules from CSS §6b, applies them to `tests/fixtures/*.html` (bs4 + soupsieve), and diffs against a hand-mirrored `apply_prune()` |
 | Front reading ban (no `Pinyin` / `Sentence Pinyin`); raw Sentence/Expression present | `tests/test_templates.py` §1 |
 | Audio aria-labels; native-only controller; sibling replay source; debounce; restart-only | `tests/test_templates.py` §§2–3b |
-| Cloze probe shape, trio gate, `<b>` rebuild, bold guard | `tests/test_templates.py` §2c |
+| Cloze probe shape, trio gate, `<b>` rebuild, bold guard, contained-trio in-place highlight | `tests/test_templates.py` §2c + `tests/test_cloze_fallback.py` — extracts the cloze block verbatim and runs 4 headless Chrome cases (full sentence preserved + body bolded in place; rebuild still fires when the trio is absent; a pre-bolded sentence is untouched) |
+| Readability floor: muted text ≥ 4.5:1 in both themes; no opacity multiplier on hint bar/source footer; 12px chrome-label floor | `tests/test_readability.py` — parses CSS tokens/rules and computes WCAG contrast from the real stylesheet |
 | Scenic band: one `Picture` reference; photo/fallback conditionals; accessible photo trigger; no retired inline thumbnail; corrected `saturate()` + `overlay` pipeline; fallback reduced motion | `tests/test_yukei.py` — back-template/CSS structural contracts plus headless Chrome interaction/layout probes |
 | Lightbox backdrop-only close, dialog semantics, alt | `tests/test_templates.py` §4 |
 | Balanced Anki conditionals | `tests/test_templates.py` §5 |
@@ -38,7 +39,7 @@ run `./verify`; CI re-runs `./verify` after every push.
 | finish.sh deterministic ordering (push main before release, `--target main`), no-op protection | `tests/test_templates.py` §9 |
 | Stdlib-only sync, microsecond backups | `tests/test_templates.py` §9 |
 | Content-driven height, no h-overflow, Pinyin stacked **under** the headword and inside its cell, type hierarchy, 3-line clamp + one-way expand, listening target size, context grid, More collapsed by default, footer containment | `tests/test_layout.py` — headless Chrome on the **real** stylesheet; skipped gracefully when Chrome is absent |
-| Back More lazy-load (template stays inert until first open, stamped once) + prune shrinks the live DOM | `tests/test_back_more.py` — extracts the real `toggleMore` / `initSecondarySection` / `pruneCompactedGlossary` and runs them in headless Chrome (skipped gracefully without Chrome) |
+| Back More lazy-load (template stays inert until first open, stamped once) + prune shrinks the live DOM + image-only definitions/secondary blocks survive (media-only) | `tests/test_back_more.py` — extracts the real `toggleMore` / `initSecondarySection` / `prepareDefinitionBoxes` / `initDefinitionTruncation` / `pruneCompactedGlossary` and runs them in headless Chrome (skipped gracefully without Chrome) |
 | Release asset carries OUR note type, deck, and every card; verification reads `collection.anki21` and not the vestigial `collection.anki2`; the gate can fail | `tests/test_apkg.py` — builds an apkg shaped exactly like Anki's (real content in `collection.anki21`, stock note types in `collection.anki2`) and asserts the verifier **rejects** a no-note-type package, a wrong note type, a count mismatch, a missing deck, and a truncated zip — each with a message (ADR 009) |
 | Clean-environment pass, no forgotten files/deps | CI (`.github/workflows/verify.yml`) runs `./verify` |
 | Every UI element collapses when its field is empty | `tests/test_templates.py` §10 — conditional-enclosure parser over Front/Back, `:has()` shell-guard checks, JS self-removal checks |
@@ -78,9 +79,11 @@ scaffolding that the Japanese repo already had:
 - `test_templates.py`: stdlib only (node optional for JS syntax checks).
 - `test_front_modes.py`: headless Chrome if present, else skip (pass).
 - `test_mature_content.py`: headless Chrome if present, else skip (pass).
+- `test_cloze_fallback.py`: headless Chrome if present, else skip (pass).
 - `test_pinyin_tones.py`: headless Chrome if present, else skip (pass).
 - `test_layout.py`: headless Chrome if present, else skip (pass).
 - `test_back_more.py`: headless Chrome if present, else skip (pass).
 - `test_yukei.py`: stdlib only; headless Chrome optional for browser probes.
+- `test_readability.py`: stdlib only (parses the real stylesheet).
 - `test_apkg.py`: stdlib only (no Anki needed — exercises `export_apkg.py`'s
   verification against synthetic packages shaped like Anki's).
