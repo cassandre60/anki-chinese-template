@@ -42,3 +42,7 @@ Protect the release first (Recommended)
 ---
 
 Isolate samples now (Recommended)
+
+---
+
+5 real cards (Recommended)

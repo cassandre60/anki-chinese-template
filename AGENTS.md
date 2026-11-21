@@ -136,7 +136,7 @@ sense-wrapper selectors, add the fixture first, then the CSS rule, then the
 `Card 1 - Style.css` (themes, layout, tones §9, compactor §6b, truncator §6c) ·
 `fetch_anki_fields.py` · `bootstrap_chinese_model.py` ·
 `set_field_descriptions.py` · `seed_sample_cards.py` ·
-`isolate_sample_notes.py` · `sync_to_anki.py` ·
+`isolate_sample_notes.py` · `curate_release_cards.py` · `sync_to_anki.py` ·
 `export_apkg.py` · `verify` · `finish.sh` · `tests/` (compactor + templates +
 front_modes + mature_content + pinyin_tones + layout + yukei + back_more +
 readability + cloze_fallback + apkg) · `docs/adr/` ·

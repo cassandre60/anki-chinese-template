@@ -16,7 +16,9 @@ ships a handful of representative cards.
 They live in a dedicated sample deck
 (`My Life Decks::Chinese::anki-chinese-template`), NOT in the study deck
 `My Life Decks::Chinese`: the release exports the sample deck only, so a
-real study deck can never leak into the artifact. Existing samples still
+real study deck can never leak into the artifact. For a release that ships
+a few real cards instead of these synthetic ones, use
+`curate_release_cards.py --count N --replace`. Existing samples still
 sitting in the study deck are moved by `isolate_sample_notes.py`.
 
 They are ordinary notes tagged `anki-chinese-template-sample` so `Browse → tag:…` finds them. Delete them any time; the note type and

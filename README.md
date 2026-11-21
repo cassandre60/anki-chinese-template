@@ -170,15 +170,16 @@ python3 set_field_descriptions.py    # idempotent: writes the Fields-dialog text
 python3 seed_sample_cards.py         # 3 sample notes in the sample deck (see below)
 ```
 
-The sample deck (`My Life Decks::Chinese::anki-chinese-template`) ships 3
-notes tagged `anki-chinese-template-sample`. They exist because Anki's
-exporter degrades to the Default deck when the target deck is empty, and
-because a fresh install should be a smoke test of the front modes, the
-compactor, Pinyin tones and the listening front. Delete them any time —
-the note type and deck survive. The release exports this sample deck only;
-your study deck (`My Life Decks::Chinese`) is never touched. If samples
-still sit in the study deck, move them once with
-`python3 isolate_sample_notes.py`.
+The sample deck (`My Life Decks::Chinese::anki-chinese-template`) ships the
+release cards, all tagged `anki-chinese-template-sample`. They exist
+because Anki's exporter degrades to the Default deck when the target deck
+is empty, and because a fresh install should be a smoke test of the front
+modes, the compactor, Pinyin tones and the listening front. Delete them any
+time — the note type and deck survive. The release exports this deck only;
+your study deck (`My Life Decks::Chinese`) is never touched. Populate it
+with `python3 seed_sample_cards.py` (synthetic samples, fresh profile) or
+`python3 curate_release_cards.py --count 5 --replace` (a few of your own
+cards; subdeck cards are still studied via the parent deck).
 
 > **`export_apkg.py` verifies what Anki wrote.** `exportPackage` returns
 > `True` and writes a structurally valid package in every case, including
@@ -210,8 +211,9 @@ editor (**Tools → Manage Note Types → Cards**).
 ├── set_field_descriptions.py      # Idempotent: writes the field descriptions
 ├── sync_to_anki.py                # Push templates/CSS to Anki (pre-sync backup)
 ├── export_apkg.py                 # Export + verify dist/*.apkg (see ADR 009)
-├── seed_sample_cards.py           # One-shot: 3 notes in the dedicated sample deck
-├── isolate_sample_notes.py        # One-shot: move sample-tagged notes into the sample deck
+├── seed_sample_cards.py           # One-shot: synthetic samples in the release deck (fresh profile)
+├── curate_release_cards.py        # One-shot: put a few of your own cards in the release deck
+├── isolate_sample_notes.py        # One-shot: move sample-tagged notes into the release deck
 ├── verify                         # Local quality gate (tests only, no side effects)
 ├── finish.sh                      # One command: verify + sync + export + commit + push + release
 ├── PRODUCT.md / MVP.md            # Product intent / current scope

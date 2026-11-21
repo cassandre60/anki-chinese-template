@@ -27,6 +27,7 @@ Tooling (stdlib-only): fetch_anki_fields.py · sync_to_anki.py ·
                        set_field_descriptions.py (idempotent)
                        seed_sample_cards.py (one-shot, create-only)
                        isolate_sample_notes.py (one-shot, idempotent)
+                       curate_release_cards.py (one-shot, --replace)
 ```
 
 ## Components
@@ -186,11 +187,15 @@ fetch_anki_fields.py → .anki_fields.json (gitignored, read-only dump)
 bootstrap_chinese_model.py → one-shot: createModel + createDeck (refuses to re-run)
 set_field_descriptions.py  → idempotent: writes the Fields-dialog descriptions
 sync_to_anki.py      → snapshot backups/<ts>/, push Front/Back/CSS
-seed_sample_cards.py  → 3 sample notes in the dedicated sample deck
-                        `My Life Decks::Chinese::anki-chinese-template`
-isolate_sample_notes.py → one-shot: create the sample deck + move every
-                        `anki-chinese-template-sample` note into it (the
-                        release source; never the study deck)
+seed_sample_cards.py  → 3 synthetic sample notes in the dedicated release
+                        deck `My Life Decks::Chinese::anki-chinese-template`
+                        (the fresh-profile path)
+curate_release_cards.py → one-shot --replace: empties the release deck and
+                        moves N of your own study cards into it, tagged
+                        `anki-chinese-template-sample` (the maintainer path;
+                        subdeck cards are still studied via the parent deck)
+isolate_sample_notes.py → one-shot: create the release deck + move every
+                        `anki-chinese-template-sample` note into it
 export_apkg.py         → exportPackage the SAMPLE deck → dist/*.apkg, then
                         RE-OPEN the zip, read `collection.anki21`, and
                         assert the note type, sample deck and note count

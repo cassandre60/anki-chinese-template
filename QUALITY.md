@@ -197,9 +197,12 @@ mechanically verified*. Code implements; tests enforce.
   `export_apkg.py` re-opens the package and requires every note to carry
   the `anki-chinese-template-sample` tag; any other note aborts
   publication (`finish.sh` full runs pass `--release`, `--local` does
-  not). The release source is the dedicated sample deck
+  not). The release source is the dedicated release deck
   `My Life Decks::Chinese::anki-chinese-template`; the study deck
-  `My Life Decks::Chinese` is never exported.
+  `My Life Decks::Chinese` is never exported. The release deck is populated
+  by `seed_sample_cards.py` (synthetic, fresh profile) or
+  `curate_release_cards.py` (a few of the maintainer's own cards, moved
+  into the subdeck and tagged).
 - `bootstrap_chinese_model.py` refuses to run when the model already
   exists — note-type creation is never a repeatable release step.
 - `finish.sh` no-op runs never publish a release.

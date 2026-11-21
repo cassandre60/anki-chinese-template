@@ -152,13 +152,15 @@ U4 CI-built releases (repo samples; replaces the live-deck export)
   fixes the current live-deck export, which ships every card in
   `My Life Decks::Chinese` rather than only the
   `anki-chinese-template-sample` notes. Interim mitigation is DONE
-  (2026-11-21): the samples were moved into the dedicated deck
-  `My Life Decks::Chinese::anki-chinese-template` (`isolate_sample_notes.py`),
-  `export_apkg.py` now exports that deck only, and its `--release` tag gate
-  blocks any package with a non-sample note; the 2026-11-21 export went
-  from 45 notes (42 real) to 3 sample notes. U4 still needs to make the
-  sample set repo-owned so the release no longer depends on the live
-  collection at all.
+  (2026-11-21): the release deck
+  `My Life Decks::Chinese::anki-chinese-template` now ships 5 curated real
+  cards (`curate_release_cards.py --count 5 --replace`, superseding the 3
+  synthetic samples, which moved back to the study deck), `export_apkg.py`
+  exports that deck only, and its `--release` tag gate blocks any package
+  with a non-sample note; the 2026-11-21 export went from 45 notes (42
+  real) to 5 curated notes. U4 still needs to make the sample set
+  repo-owned so the release no longer depends on the live collection at
+  all.
 
 ## Roadmap (evolution loop input, not committed scope)
 
