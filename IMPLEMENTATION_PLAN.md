@@ -109,20 +109,21 @@ parallelizable; P3 must follow P2 (the Pinyin rules need the markup).
   `exportPackage` works; the writer was deleted; `export_apkg.py` now
   exports and then re-reads `collection.anki21` to assert the note type,
   deck, and card count, with `tests/test_apkg.py` pinning both the correct
-  path and the five failure modes it must reject. Status: COMPLETE.
+  path and the five failure modes it must reject. Status: COMPLETE
+  (superseded for the release artifact by U4 / ADR 011; the
+  `collection.anki21` inspection lesson remains).
 
 ## Upstream sync (from anki-japanese-template, 2026-11-21)
 
-The Japanese repo's language-agnostic work after the 2026-09-30 port is
-being imported in priority tiers. Only U1 is in scope now; U2–U4 are
-recorded so a later agent can pick them up without re-reviewing the
-Japanese history.
+The Japanese repo's language-agnostic work after the 2026-09-30 port was
+imported in priority tiers. U1–U4 are COMPLETE; the notes below remain as
+the record of what was taken, adapted, or deliberately dropped.
 
 ```text
 U1 correctness + readability   ← COMPLETE
 U2 layout/UX                   ← COMPLETE
 U3 wide-card side rails        ← COMPLETE
-U4 CI-built releases (repo samples; replaces the live-deck export)
+U4 CI-built releases           ← COMPLETE
 ```
 
 - **U1 — correctness + readability.** COMPLETE:
@@ -151,21 +152,17 @@ U4 CI-built releases (repo samples; replaces the live-deck export)
   Amends 006's single-Picture rule; keeps the Chinese warm accent (the
   Japanese cool-accent override was deliberately not ported). Phones and
   narrow panes keep the top band.
-- **U4 — CI-built releases.** NOT STARTED (`0b3676b` … `83bf26b`): commit
-  Chinese sample fixtures (`fetch_sample_deck.py` adapted) and a stdlib
-  builder, add `release.yml`, and stop `finish.sh` at the tag push. Also
-  fixes the current live-deck export, which ships every card in
-  `My Life Decks::Chinese` rather than only the
-  `anki-chinese-template-sample` notes. Interim mitigation is DONE
-  (2026-11-21): the release deck
-  `My Life Decks::Chinese::anki-chinese-template` now ships 5 curated real
-  cards (`curate_release_cards.py --count 5 --replace`, superseding the 3
-  synthetic samples, which moved back to the study deck), `export_apkg.py`
-  exports that deck only, and its `--release` tag gate blocks any package
-  with a non-sample note; the 2026-11-21 export went from 45 notes (42
-  real) to 5 curated notes. U4 still needs to make the sample set
-  repo-owned so the release no longer depends on the live collection at
-  all.
+- **U4 — CI-built releases.** COMPLETE (ADR 011): `fetch_sample_deck.py`
+  snapshots the live release deck into `samples/` (5 notes, 18 fields, 6
+  media files); `build_sample_apkg.py` builds a deterministic legacy
+  schema-11 apkg from repo files with stdlib only; `release.yml` runs
+  `./verify`, builds, and publishes on a `v*` tag push; `finish.sh` stops
+  at the tag push and never builds/uploads the asset. `export_apkg.py` and
+  `tests/test_apkg.py` are retired. `./verify` runs
+  `tests/test_sample_apkg.py` (36 checks) and `build_sample_apkg.py
+  --check`. The 5 curated cards live in the release deck
+  (`curate_release_cards.py --count 5 --replace`); the study deck is never
+  part of the artifact.
 
 ## Roadmap (evolution loop input, not committed scope)
 

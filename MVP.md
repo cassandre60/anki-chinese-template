@@ -48,7 +48,7 @@ sync → export → release loop.
   creation (`bootstrap_chinese_model.py`), idempotent field descriptions
   (`set_field_descriptions.py`), sample-card seeding
   (`seed_sample_cards.py`), snapshotted sync (`sync_to_anki.py`),
-  verified apkg export (`export_apkg.py`, ADR 009), `verify` gate,
+  repo-built release (`build_sample_apkg.py`, ADR 011), `verify` gate,
   `finish.sh` release loop,
   regression tests (compactor + templates + front-modes + mature-content +
   Pinyin tones + layout + scenic-band + back-More + apkg contracts).

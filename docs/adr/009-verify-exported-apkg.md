@@ -1,6 +1,8 @@
 # ADR 009 — Verify the exported apkg, and read `collection.anki21`
 
 Status: accepted · Date: 2026-09-30 · **corrects an earlier draft of this ADR**
+· Superseded for the release artifact by ADR 011 (the
+`collection.anki21` inspection lesson still applies).
 
 ## Context
 

@@ -161,8 +161,9 @@ only):
 ```bash
 git clone https://github.com/cassandre60/anki-chinese-template.git
 cd anki-chinese-template
-python3 sync_to_anki.py    # snapshots live state to backups/, then pushes Front/Back/CSS
-python3 export_apkg.py       # exports + verifies dist/*.apkg from the deck
+python3 sync_to_anki.py       # snapshots live state to backups/, then pushes Front/Back/CSS
+python3 fetch_sample_deck.py  # snapshots the release deck into samples/ (needs Anki)
+python3 build_sample_apkg.py  # builds dist/anki-chinese-template.apkg from repo files
 ```
 
 The note type and deck must exist first. One-shot, create-only:
@@ -173,29 +174,27 @@ python3 set_field_descriptions.py    # idempotent: writes the Fields-dialog text
 python3 seed_sample_cards.py         # 3 sample notes in the sample deck (see below)
 ```
 
-The sample deck (`My Life Decks::Chinese::anki-chinese-template`) ships the
-release cards, all tagged `anki-chinese-template-sample`. They exist
-because Anki's exporter degrades to the Default deck when the target deck
-is empty, and because a fresh install should be a smoke test of the front
-modes, the compactor, Pinyin tones and the listening front. Delete them any
-time — the note type and deck survive. The release exports this deck only;
-your study deck (`My Life Decks::Chinese`) is never touched. Populate it
-with `python3 seed_sample_cards.py` (synthetic samples, fresh profile) or
+The release deck (`My Life Decks::Chinese::anki-chinese-template`) holds the
+cards that ship, all tagged `anki-chinese-template-sample`. It exists so a
+fresh install is a smoke test of the front modes, the compactor, Pinyin tones
+and the listening front. Delete them any time — the note type and deck
+survive. The release uses this deck only; your study deck
+(`My Life Decks::Chinese`) is never touched. Populate it with
+`python3 seed_sample_cards.py` (synthetic samples, fresh profile) or
 `python3 curate_release_cards.py --count 5 --replace` (a few of your own
 cards; subdeck cards are still studied via the parent deck).
+`fetch_sample_deck.py` snapshots it into `samples/`, and
+`build_sample_apkg.py` builds the apkg from those repo files (ADR 011).
 
-> **`export_apkg.py` verifies what Anki wrote.** `exportPackage` returns
-> `True` and writes a structurally valid package in every case, including
-> the empty-deck case above. So the script re-opens the zip, reads
-> `collection.anki21`, and asserts the note type, deck, and card count
-> before `finish.sh` is allowed to commit, push, or publish. Note that an
-> apkg also contains a vestigial `collection.anki2` holding stock note
-> types (Basic, Cloze, …) — inspecting that one will make a good package
-> look broken. [ADR 009](docs/adr/009-verify-exported-apkg.md) records how
-> this repo got that wrong once. A full release (`finish.sh` without
-> `--local`) additionally requires every note in the package to carry the
-> `anki-chinese-template-sample` tag, so the release never ships real
-> study cards from the live deck.
+> **Releases are built from repo files, not your live deck (ADR 011).**
+> `fetch_sample_deck.py` snapshots the release deck into `samples/`;
+> `build_sample_apkg.py` composes the note type from the repo templates and
+> builds a deterministic legacy apkg with stdlib only. `./verify` builds and
+> validates it on every run. Pushing a `v*` tag triggers `release.yml`, which
+> rebuilds from the tagged commit and publishes the asset — the desktop never
+> builds or uploads it. Your study deck is never part of the artifact.
+> [ADR 009](docs/adr/009-verify-exported-apkg.md) remains the record of the
+> `collection.anki21` inspection lesson.
 
 **Option 3 — Manual:** paste `Card 1 - Front.template.anki`,
 `Card 1 - Back.template.anki`, and `Card 1 - Style.css` into the card template
@@ -213,7 +212,9 @@ editor (**Tools → Manage Note Types → Cards**).
 ├── bootstrap_chinese_model.py     # One-shot: create the note type + deck (refuses to re-run)
 ├── set_field_descriptions.py      # Idempotent: writes the field descriptions
 ├── sync_to_anki.py                # Push templates/CSS to Anki (pre-sync backup)
-├── export_apkg.py                 # Export + verify dist/*.apkg (see ADR 009)
+├── fetch_sample_deck.py           # Snapshot the live release deck into samples/ (ADR 011)
+├── build_sample_apkg.py           # Build dist/*.apkg from repo files (stdlib, deterministic)
+├── samples/                       # Committed release fixtures (notes/fields/media)
 ├── seed_sample_cards.py           # One-shot: synthetic samples in the release deck (fresh profile)
 ├── curate_release_cards.py        # One-shot: put a few of your own cards in the release deck
 ├── isolate_sample_notes.py        # One-shot: move sample-tagged notes into the release deck

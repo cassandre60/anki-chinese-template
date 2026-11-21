@@ -22,7 +22,8 @@ Anki renderers: Desktop Qt6 WebEngine · AnkiDroid WebView
   │  live services at render time: AnkiConnect :8765 (desktop only)
   ↓
 Tooling (stdlib-only): fetch_anki_fields.py · sync_to_anki.py ·
-                       export_apkg.py · verify · finish.sh
+                       fetch_sample_deck.py · build_sample_apkg.py ·
+                       verify · finish.sh
                        bootstrap_chinese_model.py (one-shot, create-only)
                        set_field_descriptions.py (idempotent)
                        seed_sample_cards.py (one-shot, create-only)
@@ -204,23 +205,26 @@ curate_release_cards.py → one-shot --replace: empties the release deck and
                         subdeck cards are still studied via the parent deck)
 isolate_sample_notes.py → one-shot: create the release deck + move every
                         `anki-chinese-template-sample` note into it
-export_apkg.py         → exportPackage the SAMPLE deck → dist/*.apkg, then
-                        RE-OPEN the zip, read `collection.anki21`, and
-                        assert the note type, sample deck and note count
-                        (hard gate; ADR 009). In `--release` mode it also
-                        asserts every note carries
-                        `anki-chinese-template-sample`, so a release never
-                        ships real study cards. Refuses to export an empty
-                        deck, which would silently produce a package with no
-                        note type.
-verify               → local quality gate (tests only, no side effects)
-finish.sh            → verify → stamp → sync → export → commit → push main → release (--target main) → fetch tag
+fetch_sample_deck.py  → snapshot the live release deck into repo fixtures
+                        (`samples/notes.json`, `fields.json`, `media.json`,
+                        `media/`); the only writer of those files (ADR 011)
+build_sample_apkg.py  → stdlib-only headless builder: compose the note type
+                        from the repo templates + CSS + `samples/fields.json`,
+                        notes/cards/media from `samples/`, and write
+                        `dist/anki-chinese-template.apkg` (legacy schema-11
+                        package; deterministic ids/guids/timestamps). `--check`
+                        builds into a temp dir and self-validates.
+verify               → local quality gate (tests only, no side effects;
+                        includes the sample-deck contract + builder self-check)
+finish.sh            → verify → stamp → sync → commit → push main → push tag
+                        (the tag push triggers release.yml; the desktop never
+                        builds or uploads the asset — ADR 011)
 tests/               → test_compactor.py + test_templates.py
                          + test_front_modes.py + test_mature_content.py
                          + test_pinyin_tones.py + test_layout.py
                          + test_yukei.py + test_back_more.py
                          + test_readability.py + test_cloze_fallback.py
-                         + test_shortcut_clicks.py
+                         + test_shortcut_clicks.py + test_sample_apkg.py
 ```
 
 Fields are **not** a repo artifact: the Anki UI owns them; agents bootstrap
@@ -262,12 +266,20 @@ entity graph exists beyond what is shown.
   `collection.anki21`. `exportPackage` is correct, but an empty deck
   exports as a package containing no note type while returning success —
   and an apkg's `collection.anki2` is a vestigial companion that will
-  mislead any inspection reading the wrong entry.
+  mislead any inspection reading the wrong entry. (The live-deck export is
+  superseded by 011; the `collection.anki21` lesson still applies to any
+  package inspection.)
 - **010** Wide-card side rails: at `@container anki-card (min-width: 1000px)`
   the scenic band leaves the flow and clips into two 6% full-height rails
   (one `{{Picture}}` per rail, both inside the one lightbox trigger); content
   moves into `.card-content`. Phones and narrow panes keep the top band.
   Amends 006's single-Picture rule; keeps the Chinese warm accent.
+- **011** Runner-built releases: `fetch_sample_deck.py` snapshots the release
+  deck into `samples/`; `build_sample_apkg.py` builds a deterministic legacy
+  schema-11 apkg from repo files with stdlib only; `release.yml` runs
+  `./verify`, builds, and publishes on a `v*` tag push. `finish.sh` stops at
+  the tag push and never builds/uploads the asset. Supersedes 009's live-deck
+  export.
 
 ## Evolution rule
 

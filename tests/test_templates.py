@@ -486,18 +486,22 @@ def main():
     finish = open(os.path.join(ROOT, "finish.sh"), encoding="utf-8").read()
     check("finish.sh: no-op run cannot publish a release",
           "Nothing to push or release" in finish)
-    # Deterministic release ordering: push main BEFORE gh release create so
-    # the tag points at the exact pushed commit (--target main).
+    # Deterministic release ordering (ADR 011): push main, then the tag, then
+    # push the tag; the tag push triggers release.yml, which builds and
+    # publishes from the tagged commit. The desktop never builds or uploads.
     # Strip comments to check actual command order.
     finish_code = re.sub(r"^\s*#[^\n]*\n", "", finish, flags=re.M)
     finish_code = re.sub(r"^\s*#[^\n]*$", "", finish_code, flags=re.M)
-    check("finish.sh: push main before gh release create (--target main)",
+    check("finish.sh: push main before tag, tag before tag push (CI publishes)",
           "git push origin main" in finish_code
-          and "gh release create" in finish_code
-          and finish_code.index("git push origin main") < finish_code.index("gh release create")
-          and "--target main" in finish_code)
-    check("finish.sh: fetches the remote tag after release creation",
-          finish_code.index("gh release create") < finish_code.rindex("git fetch origin \"refs/tags/*:refs/tags/*\""))
+          and 'git tag "$NEW_TAG"' in finish_code
+          and 'git push origin "$NEW_TAG"' in finish_code
+          and finish_code.index("git push origin main")
+          < finish_code.index('git tag "$NEW_TAG"')
+          < finish_code.index('git push origin "$NEW_TAG"'))
+    check("finish.sh: desktop never builds or uploads the release asset (ADR 011)",
+          "build_sample_apkg.py" not in finish_code
+          and "gh release create" not in finish_code)
     check("finish.sh: verify runs before version stamp (step 0 before step 1)",
           finish.index("./verify") < finish.index("NEW_TAG="))
 

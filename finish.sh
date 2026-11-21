@@ -2,13 +2,13 @@
 # =============================================================================
 # finish.sh — single-command post-change routine.
 #
-# Run this at the end of ANY template change instead of remembering 5 steps:
+# Run this at the end of ANY template change instead of remembering 4 steps:
 #   ./finish.sh "<commit message>"
 #
 # Flags:
-#   --local          Review mode: sync + export + commit only. Skips push and
-#                    GitHub release. Use while iterating; finish the batch with
-#                    a full run (no flag) to publish.
+#   --local          Review mode: sync + commit only. Skips the stamp, push,
+#                    and tag. Use while iterating; finish the batch with a
+#                    full run (no flag) to publish.
 #   --minor          Bump the MINOR version segment (v1.x.0) instead of the
 #                    patch segment. Use for multi-feature releases.
 #   --prompt "text"  Append the user prompt to chat_history/opencode_prompts.txt
@@ -17,23 +17,26 @@
 #
 #   It executes, in order:
 #   0. ./verify — local quality gate (compactor CSS + template invariants
-#                 + layout; skipped silently when tests/ is absent)
+#                 + layout + sample-deck builder; skipped when tests/ absent).
+#                 This already builds and validates the release apkg.
 #   1. version stamp  — compute the next release tag and rewrite the CSS
 #                        header Version: line (full runs only; the stamp is
 #                        what Anki receives in step 2, so it never lags)
 #   2. sync_to_anki.py — push templates+CSS into Anki via Anki-Connect
 #                        (also snapshots live Anki state into backups/)
-#   3. export_apkg.py   — export dist/*.apkg from the live deck, then verify
-#                        it; full runs add the sample-tag release gate
-#                        (a release must never ship non-sample study cards)
-#   4. git commit     — stage everything (incl. chat_history log) & commit
-#   5. git push main  — push the commit to origin/main FIRST so the tag
-#                        points at the exact pushed release commit
-#   6. GitHub release — gh release create --target main (auto-bump tag + apkg)
-#                        → fetch the remote tag for the next version bump
+#   3. git commit     — stage everything (incl. chat_history log) & commit
+#   4. push main + tag — push the commit to origin/main, then push the tag.
+#                        The tag push triggers release.yml: CI runs
+#                        ./verify, builds the apkg from the tagged commit,
+#                        and publishes the GitHub release (ADR 011 — the
+#                        desktop never builds or uploads the release asset).
+#
+#   Publishing is CI-owned: this script never builds the artifact itself,
+#   never creates a GitHub release, and never uploads the apkg. To build
+#   the artifact locally, run `python3 build_sample_apkg.py` on demand.
 #
 # Any failure stops the chain with a clear message (set -e). Requires: Anki
-# running with Anki-Connect, gh CLI authenticated (full mode only).
+# running with Anki-Connect. (gh is only used by release.yml on the runner.)
 # =============================================================================
 set -euo pipefail
 
@@ -51,7 +54,7 @@ while [ $# -gt 0 ]; do
     --minor)  BUMP_KIND=minor ;;
     --prompt) shift; PROMPT_TEXT="${1:?--prompt requires a text argument}" ;;
     -h|--help)
-      sed -n '2,30p' "$0"; exit 0 ;;
+      sed -n '2,32p' "$0"; exit 0 ;;
     *)
       if [ -z "$COMMIT_MSG" ]; then
         COMMIT_MSG="$1"
@@ -77,7 +80,7 @@ fi
 
 # ---------- step 0: regression tests (delegates to ./verify, the local gate) ----------
 if [ -d tests ]; then
-  echo "==> [0/6] Running regression tests (./verify)"
+  echo "==> [0/4] Running regression tests (./verify)"
   ./verify
 fi
 
@@ -120,17 +123,10 @@ if n and new != css:
 PY
 fi
 
-echo "==> [1/6] Syncing templates to Anki (Anki-Connect)"
+echo "==> [2/4] Syncing templates to Anki (Anki-Connect)"
 python3 sync_to_anki.py
 
-echo "==> [2/6] Exporting + verifying dist/*.apkg"
-if [ "$LOCAL" -eq 1 ]; then
-  python3 export_apkg.py
-else
-  python3 export_apkg.py --release
-fi
-
-echo "==> [3/6] Committing changes"
+echo "==> [3/4] Committing changes"
 git add -A
 CHANGED=0
 if git diff --cached --quiet; then
@@ -142,7 +138,7 @@ fi
 
 if [ "$LOCAL" -eq 1 ]; then
   echo ""
-  echo "Local run complete (synced, exported, committed)."
+  echo "Local run complete (synced, committed)."
   exit 0
 fi
 
@@ -151,23 +147,11 @@ if [ "$CHANGED" -eq 0 ]; then
   exit 0
 fi
 
-echo "==> [4/6] Pushing to origin/main"
+echo "==> [4/4] Pushing main, then tag $NEW_TAG (CI builds and publishes the release)"
 git push origin main
+git tag "$NEW_TAG"
+git push origin "$NEW_TAG"
 
-echo "==> [5/6] Creating GitHub release (--target main: tag points at the pushed commit)"
-NOTES="Automated release from commit: $COMMIT_MSG
-
-Install: import the .apkg in Anki, then delete the sample cards — the note type is retained."
-gh release create "$NEW_TAG" dist/anki-chinese-template.apkg \
-  --target main \
-  --title "$NEW_TAG" \
-  --notes "$NOTES" \
-  --latest
-
-# The release tag was created on the REMOTE by gh above; fetch it so local
-# tag bookkeeping stays in sync for the next run's version bump.
-git fetch origin "refs/tags/*:refs/tags/*" --quiet
-
-echo "==> [6/6] Done"
 echo ""
-echo "All done: synced, exported, committed, pushed, released as $NEW_TAG"
+echo "All done: synced, committed, pushed; release.yml is building $NEW_TAG."
+echo "Watch: gh run watch (or the Actions tab). The release appears when the run completes."

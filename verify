@@ -40,6 +40,8 @@ echo "==> verify: clickable shortcut hints (headless Chrome, skipped gracefully 
 python3 tests/test_shortcut_clicks.py
 echo "==> verify: headless layout checks (skipped gracefully without Chrome)"
 python3 tests/test_layout.py
-echo "==> verify: apkg export + release-asset verification gate"
-python3 tests/test_apkg.py
+echo "==> verify: sample-deck fixture contract + headless apkg builder (ADR 011)"
+python3 tests/test_sample_apkg.py
+echo "==> verify: builder self-check (--check: build to temp + validate)"
+python3 build_sample_apkg.py --check
 echo "verify: OK"

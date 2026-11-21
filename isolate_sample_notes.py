@@ -12,7 +12,7 @@ The release exports a dedicated sample deck
 originally seeded into the study deck `My Life Decks::Chinese` before that
 deck existed. This script creates the sample deck (idempotent) and moves
 every card whose note carries the `anki-chinese-template-sample` tag into
-it, so `export_apkg.py --release` no longer sees real study cards.
+it, so the release deck contains only intended cards.
 
 It never touches untagged notes (mined cards stay where they are), and
 re-running it is a no-op.
@@ -64,7 +64,7 @@ def main():
     print(f"moved {len(cards)} tagged card(s) into the sample deck "
           f"({len(in_sample)} card(s) now in it)")
     print()
-    print("Next: python3 export_apkg.py --release   # should now pass the gate")
+    print("Next: python3 fetch_sample_deck.py   # snapshot this deck into samples/")
     return 0
 
 

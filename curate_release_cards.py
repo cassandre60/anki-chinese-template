@@ -12,8 +12,8 @@ The release exports the dedicated deck
 synthetic notes from `seed_sample_cards.py` are enough, but the maintainer
 wants the release to ship a few real mined cards instead. This script moves
 the first N cards (by note id) from the study deck into the release deck
-and tags them `anki-chinese-template-sample` so the release gate accepts
-them.
+and tags them `anki-chinese-template-sample` so the committed release deck
+stays unambiguous. `fetch_sample_deck.py` snapshots the deck afterwards.
 
 Notes moved into a subdeck are still studied through the parent deck
 `My Life Decks::Chinese` (Anki aggregates subdecks), so the study flow is
@@ -119,7 +119,7 @@ def main():
     for expr in _expressions(chosen_cards):
         print(f"  - {expr}")
     print()
-    print("Next: python3 export_apkg.py --release   # verifies the gate")
+    print("Next: python3 fetch_sample_deck.py   # snapshot this deck into samples/")
     return 0
 
 

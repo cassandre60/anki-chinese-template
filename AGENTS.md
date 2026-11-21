@@ -79,21 +79,19 @@ After **every** template/CSS modification, finish with exactly one command:
 
 ```bash
 ./finish.sh "<semantic commit message>"
-# --local: sync + export + commit only · --minor: bump v0.x.0
+# --local: sync + commit only · --minor: bump v0.x.0
 # --prompt "text": archive prompt (rule 3) before anything runs
 ```
 
-Chain (stops on first failure): `0.` `./verify` (side-effect-free gate) →
-`1.` version stamp → `2.` `sync_to_anki.py` (pre-sync snapshot to gitignored
-`backups/<timestamp>/`) → `3.` `export_apkg.py` (sample deck
-`My Life Decks::Chinese::anki-chinese-template`
-→ gitignored `dist/*.apkg` via `exportPackage`, then **re-opened and
-verified** by reading `collection.anki21`; hard-fails on a mismatch — ADR
-009; full runs add `--release`, which refuses any package containing a
-note not tagged `anki-chinese-template-sample`) → `4.` commit → `5.` push
-main → `6.` `gh release create --target main` (tag points at the pushed
-commit) → fetch the remote tag. The apkg ships as a Release asset, never in
-the repo. Do not skip, reorder, or substitute steps.
+Chain (stops on first failure): `0.` `./verify` (side-effect-free gate; it
+already builds and validates the release apkg) → `1.` version stamp →
+`2.` `sync_to_anki.py` (pre-sync snapshot to gitignored
+`backups/<timestamp>/`) → `3.` commit → `4.` push main, then push the tag.
+The tag push triggers `release.yml`: CI runs `./verify`, builds the apkg
+from repo files (`samples/`, ADR 011), and publishes the GitHub release.
+The desktop never builds or uploads the release asset; the apkg ships as a
+Release asset, never in the repo. Do not skip, reorder, or substitute steps.
+To build the artifact locally on demand: `python3 build_sample_apkg.py`.
 
 ### 3. Prompt archiving
 
@@ -143,7 +141,9 @@ sense-wrapper selectors, add the fixture first, then the CSS rule, then the
 `fetch_anki_fields.py` · `bootstrap_chinese_model.py` ·
 `set_field_descriptions.py` · `seed_sample_cards.py` ·
 `isolate_sample_notes.py` · `curate_release_cards.py` · `sync_to_anki.py` ·
-`export_apkg.py` · `verify` · `finish.sh` · `tests/` (compactor + templates +
+`fetch_sample_deck.py` · `build_sample_apkg.py` · `verify` · `finish.sh` ·
+`tests/` (compactor + templates +
 front_modes + mature_content + pinyin_tones + layout + yukei + back_more +
-readability + cloze_fallback + shortcut_clicks + apkg) · `docs/adr/` ·
+readability + cloze_fallback + shortcut_clicks + sample_apkg) · `docs/adr/` ·
+`samples/` (committed release fixtures) ·
 `chat_history/` · `dist/` + `backups/` (gitignored).

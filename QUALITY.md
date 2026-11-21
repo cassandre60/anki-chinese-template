@@ -215,16 +215,16 @@ mechanically verified*. Code implements; tests enforce.
 - Python tooling stays stdlib-only (test-only deps allowed); backups use
   microsecond timestamps; snapshots happen **before** any overwrite; empty
   live state aborts sync.
-- **A release never ships non-sample notes.** In `--release` mode
-  `export_apkg.py` re-opens the package and requires every note to carry
-  the `anki-chinese-template-sample` tag; any other note aborts
-  publication (`finish.sh` full runs pass `--release`, `--local` does
-  not). The release source is the dedicated release deck
-  `My Life Decks::Chinese::anki-chinese-template`; the study deck
-  `My Life Decks::Chinese` is never exported. The release deck is populated
-  by `seed_sample_cards.py` (synthetic, fresh profile) or
-  `curate_release_cards.py` (a few of the maintainer's own cards, moved
-  into the subdeck and tagged).
+- **Releases are built from repo files, not the live collection (ADR 011).**
+  `fetch_sample_deck.py` snapshots the dedicated release deck
+  (`My Life Decks::Chinese::anki-chinese-template`) into `samples/`;
+  `build_sample_apkg.py` composes the note type from the repo templates +
+  `samples/fields.json` and builds `dist/anki-chinese-template.apkg` with
+  stdlib only. `./verify` builds and validates it; a `v*` tag push triggers
+  `release.yml`, which rebuilds from the tagged commit and publishes. The
+  study deck `My Life Decks::Chinese` never reaches the artifact. The release
+  deck is populated by `seed_sample_cards.py` (synthetic, fresh profile) or
+  `curate_release_cards.py` (a few of the maintainer's own cards).
 - `bootstrap_chinese_model.py` refuses to run when the model already
   exists — note-type creation is never a repeatable release step.
 - `finish.sh` no-op runs never publish a release.

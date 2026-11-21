@@ -41,7 +41,7 @@ run `./verify`; CI re-runs `./verify` after every push.
 | Stdlib-only sync, microsecond backups | `tests/test_templates.py` §9 |
 | Content-driven height, no h-overflow, Pinyin stacked **under** the headword and inside its cell, type hierarchy, 3-line clamp + one-way expand, listening target size, context grid, More collapsed by default, footer containment | `tests/test_layout.py` — headless Chrome on the **real** stylesheet; skipped gracefully when Chrome is absent |
 | Back More lazy-load (template stays inert until first open, stamped once) + prune shrinks the live DOM + image-only definitions/secondary blocks survive (media-only) | `tests/test_back_more.py` — extracts the real `toggleMore` / `initSecondarySection` / `prepareDefinitionBoxes` / `initDefinitionTruncation` / `pruneCompactedGlossary` and runs them in headless Chrome (skipped gracefully without Chrome) |
-| Release asset carries OUR note type, deck, and every card; verification reads `collection.anki21` and not the vestigial `collection.anki2`; the gate can fail; a `--release` package contains only sample-tagged notes while local mode still accepts a leaky one | `tests/test_apkg.py` — builds an apkg shaped exactly like Anki's (real content in `collection.anki21`, stock note types in `collection.anki2`) and asserts the verifier **rejects** a no-note-type package, a wrong note type, a count mismatch, a missing deck, a truncated zip, and (release mode) a non-sample note — each with a message (ADR 009) |
+| Release artifact is built from repo files only: zip layout, schema-11 collection, model byte-equality with the repo templates/CSS, field metadata, deck tree, note/card shapes, guids/checksums, media byte-equality, deterministic rebuild | `tests/test_sample_apkg.py` — validates the committed `samples/` fixtures, runs the real `build_sample_apkg.py` into a temp dir, and independently re-opens the artifact; `./verify` also runs `build_sample_apkg.py --check` (ADR 011) |
 | Clean-environment pass, no forgotten files/deps | CI (`.github/workflows/verify.yml`) runs `./verify` |
 | Every UI element collapses when its field is empty | `tests/test_templates.py` §10 — conditional-enclosure parser over Front/Back, `:has()` shell-guard checks, JS self-removal checks |
 
@@ -87,5 +87,5 @@ scaffolding that the Japanese repo already had:
 - `test_shortcut_clicks.py`: headless Chrome if present, else skip (pass).
 - `test_yukei.py`: stdlib only; headless Chrome optional for browser probes.
 - `test_readability.py`: stdlib only (parses the real stylesheet).
-- `test_apkg.py`: stdlib only (no Anki needed — exercises `export_apkg.py`'s
-  verification against synthetic packages shaped like Anki's).
+- `test_sample_apkg.py`: stdlib only (no Anki needed — validates the committed
+  `samples/` fixtures and runs the real `build_sample_apkg.py`).

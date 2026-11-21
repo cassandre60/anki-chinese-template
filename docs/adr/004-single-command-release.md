@@ -1,5 +1,9 @@
 # ADR 004 — Single-command release with pre-sync snapshots
 
+Status: accepted · amended by ADR 011 (the export step and local
+`gh release create` moved to a CI runner; the verify-first ordering,
+pre-sync snapshots, and tag==pushed-commit invariants are unchanged).
+
 ## Context
 
 Multi-step endings (test → sync → export → commit → push → release) were
