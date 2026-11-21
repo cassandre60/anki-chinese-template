@@ -118,7 +118,10 @@ compactor targets Chinese structural markup only (no Japanese SC selectors)
 muted text AA + 12px chrome-label floor · long-hero stacking (2+ line
 expression moves side meta below the word) · sentence scale bumped, mobile
 expression ≥1.7x the sentence · clickable shortcut hints (P/X/C buttons
-through `applyShortcut`; 44px phone targets) · `:has()` is intentional
+through `applyShortcut`; 44px phone targets) · wide-card side rails (1000px
+container gate; two `Picture` rails in one lightbox trigger; `.card-content`
+above the band; phones/narrow panes keep the top band) · `:has()` is
+intentional
 architecture · no debug badges or verbose labels ·
 all user-facing strings Chinese · vanilla scoped JS resilient to WebView DOM
 re-use.

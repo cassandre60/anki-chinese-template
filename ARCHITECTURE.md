@@ -107,23 +107,26 @@ Single quiet column with typography-driven hierarchy:
 ```text
 card-container
   ├── .scenic-band (photo-derived when Picture exists; aria-hidden
-  │    ink-wash pagoda fallback otherwise; click/Enter opens the lightbox)
-  ├── .hero-header (3-col grid: left meta | centered word | right meta;
-  │    stacked word-over-sides on phones AND on long expressions via
-  │    `initHeroStacking` → `.is-long`)
-  │    ├── .hero-side-left (freq visualizer + 词语 audio)
-  │    ├── .hero-word-wrap (column!)
-  │    │    ├── .word-display (target — hero element)
-  │    │    └── .pinyin-display (reading; tone-coloured)
-  │    └── .hero-side-right (例句 audio)
-  ├── definition-box.primary-definition (compacted §6b, 3-line §6c)
-  ├── .context-grid (full-width sentence surface)
-  │    ├── .sentence-chinese
-  │    └── .sentence-pinyin (optional, quieter tier)
-  ├── .more-section (hidden) + .more-toggle "详情 ▾"
-  │    └── translation (click/T/X) · context · hanzi notes · notes · source
-  │        (.source-footer) · full extended definition (.extended-full —
-  │        compactor never touches it)
+  │    pagoda fallback otherwise; click/Enter opens the lightbox. On wide
+  │    cards (ADR 010) it leaves the flow and clips into two 6% side rails
+  │    via #scenic-side-clip; below 1000px it is the compact top band)
+  └── .card-content (wide cards: position:relative / z-index:1 above the rails)
+      ├── .hero-header (3-col grid: left meta | centered word | right meta;
+      │    stacked word-over-sides on phones AND on long expressions via
+      │    `initHeroStacking` → `.is-long`)
+      │    ├── .hero-side-left (freq visualizer + 词语 audio)
+      │    ├── .hero-word-wrap (column!)
+      │    │    ├── .word-display (target — hero element)
+      │    │    └── .pinyin-display (reading; tone-coloured)
+      │    └── .hero-side-right (例句 audio)
+      ├── definition-box.primary-definition (compacted §6b, 3-line §6c)
+      ├── .context-grid (full-width sentence surface)
+      │    ├── .sentence-chinese
+      │    └── .sentence-pinyin (optional, quieter tier)
+      ├── .more-section (hidden) + .more-toggle "详情 ▾"
+      │    └── translation (click/T/X) · context · hanzi notes · notes · source
+      │        (.source-footer) · full extended definition (.extended-full —
+      │        compactor never touches it)
 ```
 
 `.hero-word-wrap` is `flex-direction: column`: the headword and its Pinyin
@@ -177,7 +180,8 @@ indicator, not true progress), §8 sentence/translation + secondary blocks,
 §11 footer, §12 listening (inert until `.listening-mode`), §13 mobile,
 §14 deletable ink-wash backdrop, §15 reduced motion (+ blur kill),
 §16 card entrance (single 0.15s settle, no stagger; killed by §15),
-§17 scenic band (photo mode with illustrated fallback).
+§17 scenic band (photo mode with illustrated fallback; §17b wide-card side
+rails — ADR 010).
 
 `--furigana-headroom` survives as a **generic vertical clearance** token:
 it is the §6c truncator's line-height math and the definition/sentence top
@@ -259,6 +263,11 @@ entity graph exists beyond what is shown.
   exports as a package containing no note type while returning success —
   and an apkg's `collection.anki2` is a vestigial companion that will
   mislead any inspection reading the wrong entry.
+- **010** Wide-card side rails: at `@container anki-card (min-width: 1000px)`
+  the scenic band leaves the flow and clips into two 6% full-height rails
+  (one `{{Picture}}` per rail, both inside the one lightbox trigger); content
+  moves into `.card-content`. Phones and narrow panes keep the top band.
+  Amends 006's single-Picture rule; keeps the Chinese warm accent.
 
 ## Evolution rule
 

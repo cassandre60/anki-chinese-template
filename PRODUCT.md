@@ -93,7 +93,8 @@ off-screen context to be solvable is a bad mine and should be re-mined.
   on the front. The sentence front is the universal fallback for every
   failure path.
 - Back hierarchy: a compact scenic band (the card's `Picture` when
-  present, otherwise a decorative ink-wash pagoda fallback), then the
+  present, otherwise a decorative ink-wash pagoda fallback; on wide desktop
+  cards it becomes two side rails — ADR 010), then the
   word target with its Pinyin line (four-tone coloured), 5-star frequency
   visualizer, compacted primary definition (§6b), sentence context with an
   optional sentence-Pinyin line, native circular audio (`例句`/`词语`),
@@ -136,8 +137,8 @@ off-screen context to be solvable is a bad mine and should be re-mined.
 - Ultra-compact, content-driven height (no viewport fill, no dead space);
   empty space on the front is acceptable — never filled with UI.
 - Fluid `clamp()` sizing phone → 4K; a compact scenic band spans the card
-  top on desktop and phones, while sentence context remains full-width
-  below it.
+  top on phones and narrow panes and becomes two side rails on wide desktop
+  cards (ADR 010), while sentence context remains full-width below it.
 - Pinyin is an always-present plain line (the reading is required to
   answer), never a hover reveal — there is no ruby in Chinese, so the
   Japanese zero-reflow furigana machinery has no counterpart here.

@@ -120,8 +120,8 @@ Japanese history.
 
 ```text
 U1 correctness + readability   ← COMPLETE
-U2 layout/UX (sentence scale, long-hero stacking, clickable hints)
-U3 wide-card side rails (changes the single-Picture invariant)
+U2 layout/UX                   ← COMPLETE
+U3 wide-card side rails        ← COMPLETE
 U4 CI-built releases (repo samples; replaces the live-deck export)
 ```
 
@@ -144,10 +144,13 @@ U4 CI-built releases (repo samples; replaces the live-deck export)
   bar is now buttons routed through `window.applyShortcut` (P/X/C), visible
   on phones as ≥44px touch targets, so `P` (hide Pinyin) works without a
   keyboard.
-- **U3 — wide-card side rails.** NOT STARTED (`ffb0cca` … `32bea79`):
-  changes `Picture` from one reference to two rail references (one
-  trigger); needs an explicit QUALITY/ADR amendment and a
-  desktop/narrow/mobile visual review. Adapt the pagoda fallback.
+- **U3 — wide-card side rails.** COMPLETE (ADR 010; `ffb0cca` … `32bea79`):
+  at `@container anki-card (min-width: 1000px)` the band leaves the flow and
+  clips into two 6% full-height rails (one `{{Picture}}` per rail, both
+  inside the one lightbox trigger); content moved into `.card-content`.
+  Amends 006's single-Picture rule; keeps the Chinese warm accent (the
+  Japanese cool-accent override was deliberately not ported). Phones and
+  narrow panes keep the top band.
 - **U4 — CI-built releases.** NOT STARTED (`0b3676b` … `83bf26b`): commit
   Chinese sample fixtures (`fetch_sample_deck.py` adapted) and a stdlib
   builder, add `release.yml`, and stop `finish.sh` at the tag push. Also

@@ -111,6 +111,7 @@
   --scenic-cloud: #2c2f52;
   --scenic-star-op: .8;
   --scenic-band-h: clamp(44px, 12.5vw, 58px);
+  --scenic-rail-w: 6%;
   --scenic-blur: 16px;
   --scenic-sat: 0.8;
   --scenic-tint: 0.25;
@@ -1947,5 +1948,143 @@
 @media (prefers-reduced-motion: reduce) {
   .scenic-star, .scenic-glow, .scenic-cloud {
     animation: none !important;
+  }
+}
+
+
+/* ==============================================================================
+   17b. WIDE-CARD SIDE RAILS
+   On a wide reviewer pane the scenic band leaves the flow and becomes two
+   full-height side rails: one full-card layer clipped by an SVG path. The
+   photo band keeps its blurred-picture treatment inside the rails; an empty
+   Picture field keeps the illustrated pagoda fallback. Below 1000px the top
+   band in §17 is untouched (phones and narrow reviewer panes).
+   ============================================================================== */
+
+/* The clip-path definition box must not consume band height: .scenic-band svg
+   above is sized 100% × 100%, and this SVG is the band's first child. */
+.scenic-band .scenic-side-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+@container anki-card (min-width: 1000px) {
+  /* Reclaim top vertical space: margin-top zeroed, padding-top zeroed, and
+     hero padding tightened. Horizontal padding keeps content clear of the
+     side rails so text never renders on top of the image bands. */
+  .back-card .card-container {
+    margin-top: 0;
+    padding-top: 0;
+    padding-left: calc(var(--scenic-rail-w, 6%) + var(--container-pad-x));
+    padding-right: calc(var(--scenic-rail-w, 6%) + var(--container-pad-x));
+  }
+
+  .back-card .word-display {
+    padding-top: clamp(16px, 2.4vh, 26px);
+  }
+
+  .back-card .hero-header {
+    margin-top: 0;
+  }
+
+  .back-card .card-container > .scenic-band {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    border-radius: 0;
+    z-index: 0;
+    /* Mirrors the two rects in the template's #scenic-side-clip
+       (0 → 0.06 and 0.94 → 1), i.e. --scenic-rail-w per side. */
+    clip-path: url(#scenic-side-clip);
+    /* No vertical mask: the rails run to the card's top edge. The card's
+       own rounded clipping handles the corners. */
+  }
+
+  /* Illustrated fallback (no Picture) uses the sky gradient in the rails */
+  .back-card .card-container > .scenic-band:not(:has(.scenic-photo)) {
+    background: var(--scenic-sky);
+  }
+
+  /* Wide rails: remove all overlays (tint, wash, grain, fade) on top of the
+     photo so the picture's authentic colors are preserved without any
+     color-shifting or purple cast (modulo blurriness). */
+  .scenic-band .scenic-photo .tint,
+  .scenic-band .scenic-photo .wash,
+  .scenic-band .scenic-photo .grain,
+  .scenic-band .scenic-photo .fade {
+    display: none;
+  }
+
+  /* Wide rails: left and right crops of the card picture. Each rail samples
+     its respective side of the image so centered subjects blur visibly into
+     the side rails instead of disappearing. */
+  .scenic-photo .rail-photo {
+    inset: auto;
+    top: 0;
+    bottom: 0;
+    width: var(--scenic-rail-w, 6%);
+    overflow: hidden;
+  }
+
+  .scenic-photo .rail-photo-left {
+    left: 0;
+  }
+
+  .scenic-photo .rail-photo-right {
+    display: block;
+    right: 0;
+  }
+
+  .scenic-photo .rail-photo img {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(var(--scenic-blur));
+  }
+
+  .scenic-photo .rail-photo-left img {
+    object-position: 25% center;
+  }
+
+  .scenic-photo .rail-photo-right img {
+    object-position: 75% center;
+  }
+
+  /* Inner-edge falloff: each rail dissolves into the card surface. */
+  .scenic-band::before,
+  .scenic-band::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--scenic-rail-w, 6%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .scenic-band::before {
+    left: 0;
+    background: linear-gradient(to right, transparent 55%, var(--card-bg) 100%);
+  }
+
+  .scenic-band::after {
+    right: 0;
+    background: linear-gradient(to left, transparent 55%, var(--card-bg) 100%);
+  }
+
+  .card-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Keep the full-card trigger's keyboard ring inside the clipped rails. */
+  .scenic-band .scenic-photo-trigger:focus-visible {
+    outline-offset: -4px;
   }
 }

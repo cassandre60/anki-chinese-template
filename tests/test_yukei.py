@@ -190,9 +190,12 @@ def main() -> int:
     markup = re.sub(r"<!--.*?-->", "", back, flags=re.S)
     markup = re.sub(r"<script.*?</script>", "", markup, flags=re.S)
 
-    # Markup shape: one Picture field, mutually exclusive photo/fallback bands,
-    # and no retired context-grid thumbnail.
-    check("Back: Picture is referenced exactly once", len(re.findall(r"\{\{Picture\}\}", back)) == 1)
+    # Markup shape: Picture in left and right rails inside the scenic band,
+    # mutually exclusive photo/fallback bands, and no retired context-grid
+    # thumbnail.
+    check("Back: Picture is referenced in both rails inside the scenic band",
+          len(re.findall(r"\{\{Picture\}\}", back)) == 2
+          and "rail-photo-left" in back and "rail-photo-right" in back)
     check(
         "Back: scenic photo/fallback conditionals are balanced and adjacent",
         re.search(
@@ -216,6 +219,32 @@ def main() -> int:
     photo = photo_branch.group(1) if photo_branch else ""
     fallback_branch = re.search(r"\{\{\^Picture\}\}([\s\S]*?)\{\{/Picture\}\}", back)
     fallback = fallback_branch.group(1) if fallback_branch else ""
+
+    check(
+        "Back: one card-content wrapper holds everything after the band",
+        re.search(
+            r"\{\{/Picture\}\}\s*<div class=\"card-content\">[\s\S]*?"
+            r'<div class="hero-header">',
+            back,
+        )
+        is not None
+        and "<!-- End card-content -->" in back,
+    )
+    check(
+        "Back: both scenic branches define the wide-card side clip",
+        photo_branch is not None
+        and fallback_branch is not None
+        and photo.count('id="scenic-side-clip"') == 1
+        and fallback.count('id="scenic-side-clip"') == 1
+        and photo.count('width="0.06"') == 2
+        and fallback.count('width="0.06"') == 2
+        and photo.count('x="0.94"') == 1
+        and fallback.count('x="0.94"') == 1,
+    )
+    check(
+        "Back: illustrated scene carries its own wide-card class",
+        'class="scenic-scene"' in fallback,
+    )
 
     check(
         "Back: photo band reuses the existing lightbox trigger",
@@ -292,6 +321,7 @@ def main() -> int:
         ("--scenic-sat", "0.8"),
         ("--scenic-tint", "0.25"),
         ("--scenic-wash", "0.25"),
+        ("--scenic-rail-w", "6%"),
     ):
         check(f"CSS: {token} is declared once with {value}", len(re.findall(rf"{re.escape(token)}\s*:\s*{re.escape(value)}\s*;", css)) == 1)
 
@@ -378,6 +408,80 @@ def main() -> int:
             css,
         )
         is not None,
+    )
+
+    # --- Wide-card side rails (§17b) ---
+    wide = css.split("17b. WIDE-CARD SIDE RAILS", 1)[1] if "17b. WIDE-CARD SIDE RAILS" in css else ""
+    check(
+        "CSS: wide rails are gated by the 1000px card container",
+        "@container anki-card (min-width: 1000px)" in wide,
+    )
+    defs_rule = rule_body(css, r"\.scenic-band \.scenic-side-defs")
+    check(
+        "CSS: clip definition box is zero-sized",
+        defs_rule is not None
+        and "position: absolute" in defs_rule
+        and "width: 0" in defs_rule
+        and "height: 0" in defs_rule,
+    )
+    wide_band = rule_body(wide, r"\.back-card \.card-container > \.scenic-band")
+    check(
+        "CSS: wide band leaves flow, fills the card, and clips to rails",
+        wide_band is not None
+        and "position: absolute" in wide_band
+        and "inset: 0" in wide_band
+        and "height: auto" in wide_band
+        and "margin: 0" in wide_band
+        and "clip-path: url(#scenic-side-clip)" in wide_band
+        and "mask-image" not in wide_band,
+    )
+    fallback_wide_rule = rule_body(
+        wide, r"\.back-card \.card-container > \.scenic-band:not\(:has\(\.scenic-photo\)\)")
+    check(
+        "CSS: wide fallback keeps the sky gradient in the rails",
+        fallback_wide_rule is not None and "background: var(--scenic-sky)" in fallback_wide_rule,
+    )
+    check(
+        "CSS: wide rails disable overlays (tint, wash, grain, fade) on the photo",
+        all(f".scenic-band .scenic-photo .{layer}" in wide
+            for layer in ("tint", "wash", "grain", "fade"))
+        and "display: none" in wide,
+    )
+    wide_pad = rule_body(wide, r"\.back-card \.card-container")
+    check(
+        "CSS: wide card reclaims the scenic top padding and clears the rails",
+        wide_pad is not None
+        and "padding-top: 0" in wide_pad
+        and "var(--scenic-rail-w, 6%)" in wide_pad,
+    )
+    rail_img = rule_body(wide, r"\.scenic-photo \.rail-photo img")
+    check(
+        "CSS: wide rail images keep authentic colors (blur only), sampling 25%/75%",
+        rail_img is not None
+        and "filter: blur(var(--scenic-blur))" in rail_img
+        and "saturate" not in rail_img
+        and "object-position: 25% center" in wide
+        and "object-position: 75% center" in wide,
+    )
+    fade_pseudos = re.search(
+        r"\.scenic-band::before,\s*\.scenic-band::after\s*\{([^}]*)\}", wide)
+    check(
+        "CSS: wide inner fade matches the 6% rail token",
+        fade_pseudos is not None
+        and "width: var(--scenic-rail-w, 6%)" in fade_pseudos.group(1)
+        and wide.count("linear-gradient(to right, transparent 55%, var(--card-bg) 100%)") == 1
+        and wide.count("linear-gradient(to left, transparent 55%, var(--card-bg) 100%)") == 1,
+    )
+    content_rule = rule_body(wide, r"\.card-content")
+    check(
+        "CSS: wide content layer paints above the rails",
+        content_rule is not None
+        and "position: relative" in content_rule
+        and "z-index: 1" in content_rule,
+    )
+    check(
+        "CSS: wide focus ring is inset inside the clipped rails",
+        "outline-offset: -4px" in wide,
     )
 
     # Dynamic browser contracts run against the real stylesheet and the real

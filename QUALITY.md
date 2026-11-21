@@ -101,13 +101,21 @@ mechanically verified*. Code implements; tests enforce.
 - `P` toggles `.pinyin-hidden` on the back wrapper, hiding both Pinyin
   lines with `display:none` (not opacity) so a hidden reading stops
   costing vertical space.
-- `Picture` is referenced exactly once in the back template. A populated field
-  renders the card-derived scenic photo and keeps click/Enter lightbox access;
-  an empty field renders the non-focusable, `aria-hidden` illustrated fallback.
-  The retired `.context-picture` markup is absent, so sentence context is
-  full-width. The photo pipeline preserves source color with `saturate()` and
-  `mix-blend-mode: overlay`; it must never use `grayscale()` +
-  `mix-blend-mode: color`.
+- `Picture` is referenced twice in the back template, both inside the single
+  `.scenic-photo` lightbox trigger (`.rail-photo-left` / `.rail-photo-right`):
+  one focus stop, one lightbox target (ADR 010). A populated field renders the
+  card-derived scenic photo and keeps click/Enter lightbox access; an empty
+  field renders the non-focusable, `aria-hidden` illustrated pagoda fallback.
+  The retired `.context-picture` markup is absent. The top-band photo pipeline
+  preserves source color with `saturate()` + `mix-blend-mode: overlay` (never
+  `grayscale()` + `mix-blend-mode: color`); on wide cards the rails disable the
+  overlays and blur the image directly, keeping authentic colors.
+- **Wide-card rails (ADR 010):** at `@container anki-card (min-width: 1000px)`
+  the band leaves the flow, fills the card, and is clipped to two 6%
+  (`--scenic-rail-w`) full-height rails by the template's `#scenic-side-clip`;
+  content lives in `.card-content` (`position: relative; z-index: 1`) and the
+  card's horizontal padding clears the rails. Below 1000px the §17 top band is
+  unchanged (phones and narrow panes).
 - Secondary information (translation, context, hanzi notes, notes, source,
   full extended definition) lives inside `.more-section`, toggleable via
   `详情 ▾` / `关闭 ▴`; the toggle and section self-remove when no secondary

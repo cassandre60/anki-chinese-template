@@ -28,9 +28,10 @@ unchanged. The reading subsystem is not — see
   <kbd>P</kbd> hides both Pinyin lines for a Chinese-only read. Colour is
   applied to the Pinyin only — the target word keeps the single accent colour.
 - **📱 Fluid responsive layout** — `clamp()` sizing with no breakpoint jumps;
-  a compact scenic band spans the card top on desktop and phones, with
-  full-width sentence context below. Cards size to their content (no forced
-  viewport fill).
+  a compact scenic band spans the card top on phones and narrow panes and
+  becomes two edge rails on wide desktop cards (ADR 010), with full-width
+  sentence context below. Cards size to their content (no forced viewport
+  fill).
 - **🔊 Native audio** — `例句` / `词语` buttons delegate to Anki's replay link
   (never HTML5 audio), with re-tap debounce so audio can't overlap on
   AnkiDroid. The ring is a playback indicator (a decorative play-pulse), not
