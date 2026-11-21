@@ -184,7 +184,10 @@ them any time — the note type and deck survive.
 > apkg also contains a vestigial `collection.anki2` holding stock note
 > types (Basic, Cloze, …) — inspecting that one will make a good package
 > look broken. [ADR 009](docs/adr/009-verify-exported-apkg.md) records how
-> this repo got that wrong once.
+> this repo got that wrong once. A full release (`finish.sh` without
+> `--local`) additionally requires every note in the package to carry the
+> `anki-chinese-template-sample` tag, so the release never ships real
+> study cards from the live deck.
 
 **Option 3 — Manual:** paste `Card 1 - Front.template.anki`,
 `Card 1 - Back.template.anki`, and `Card 1 - Style.css` into the card template

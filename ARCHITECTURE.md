@@ -189,8 +189,11 @@ seed_sample_cards.py  → 3 sample notes so the deck (and the apkg) is non-empty
 export_apkg.py         → exportPackage deck → dist/*.apkg, then RE-OPEN
                         the zip, read `collection.anki21`, and assert the
                         note type, deck and note count (hard gate;
-                        ADR 009). Refuses to export an empty deck, which
-                        would silently produce a package with no note type.
+                        ADR 009). In `--release` mode it also asserts every
+                        note carries `anki-chinese-template-sample`, so a
+                        release never ships real study cards. Refuses to
+                        export an empty deck, which would silently produce a
+                        package with no note type.
 verify               → local quality gate (tests only, no side effects)
 finish.sh            → verify → stamp → sync → export → commit → push main → release (--target main) → fetch tag
 tests/               → test_compactor.py + test_templates.py

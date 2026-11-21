@@ -11,7 +11,9 @@ tests build packages in-memory the way Anki does and check that
     deck exported as a package that installs nothing;
   - REJECTS a package carrying a different note type;
   - REJECTS a note-count mismatch;
-  - READS `collection.anki21`, not `collection.anki2`.
+  - READS `collection.anki21`, not `collection.anki2`;
+  - REJECTS a `--release` package containing any non-sample note (a real
+    study deck must never ship), while local mode accepts it.
 
 The last one is a regression test for a bug this repository actually
 shipped once: an apkg contains TWO databases, and `collection.anki2`
@@ -77,10 +79,13 @@ STOCK_MODELS = {
 }
 
 
-def build_package(path, models, decks, notes, vestigial=True):
+def build_package(path, models, decks, notes, vestigial=True, note_tags=None):
     """Write an apkg shaped exactly like Anki's: the real content in
     collection.anki21, and — when `vestigial` — a second database holding
     stock note types, which is what Anki really does."""
+    tags = list(note_tags) if note_tags is not None else [""] * len(notes)
+    if len(tags) != len(notes):
+        raise ValueError("note_tags must match notes")
     tmpdir = tempfile.mkdtemp()
     db = os.path.join(tmpdir, export_apkg.LEGACY_DB)
     con = sqlite3.connect(db)
@@ -102,8 +107,9 @@ def build_package(path, models, decks, notes, vestigial=True):
         data text not null)""")
     con.execute("INSERT INTO col VALUES (1,0,0,0,11,0,0,0,'{}',?,?,'{}','{}')",
                 (json.dumps(models), json.dumps(decks)))
-    con.executemany("INSERT INTO notes VALUES (?,?,?,0,-1,'',?,?,0,0,'')",
-                    [(i + 1, f"g{i}", 1, n, n) for i, n in enumerate(notes)])
+    con.executemany("INSERT INTO notes VALUES (?,?,?,0,-1,?,?,?,0,0,'')",
+                    [(i + 1, f"g{i}", 1, tag, n, n)
+                     for i, (n, tag) in enumerate(zip(notes, tags))])
     con.executemany("INSERT INTO cards VALUES (?,?,?,0,0,-1,0,0,0,0,0,0,0,0,0,0,0,'')",
                     [(i + 1, i + 1, 1) for i in range(len(notes))])
     con.commit()
@@ -145,14 +151,14 @@ DECKS = {
 }
 
 
-def run_verify(path, expected):
+def run_verify(path, expected, require_samples=False):
     """Point export_apkg at `path` and capture its verdict + message."""
     original = export_apkg.EXPORT_PATH
     export_apkg.EXPORT_PATH = path
     sink = io.StringIO()
     try:
         with contextlib.redirect_stdout(sink):
-            ok = export_apkg.verify(expected)
+            ok = export_apkg.verify(expected, require_samples=require_samples)
     finally:
         export_apkg.EXPORT_PATH = original
     return ok, sink.getvalue()
@@ -224,6 +230,26 @@ def main():
         z.writestr("meta", "{}")
     ok, msg = run_verify(junk, 3)
     check("REJECTS a package missing collection.anki21", ok is False)
+
+    # --- 8. Release gate: sample-tagged-only package is accepted -----------
+    samples = os.path.join(tmp, "samples.apkg")
+    build_package(samples, {"1": CHINESE_MODEL}, DECKS, ["学习", "窗户", "图书馆"],
+                  note_tags=[export_apkg.SAMPLE_TAG] * 3)
+    ok, msg = run_verify(samples, 3, require_samples=True)
+    check("release gate ACCEPTS a package whose notes are all sample-tagged", ok is True, msg)
+
+    # --- 9. Release gate: a real study card aborts publication -------------
+    leaky = os.path.join(tmp, "leaky.apkg")
+    build_package(leaky, {"1": CHINESE_MODEL}, DECKS, ["学习", "窗户", "投资"],
+                  note_tags=[export_apkg.SAMPLE_TAG, export_apkg.SAMPLE_TAG, "yomitan"])
+    ok, msg = run_verify(leaky, 3, require_samples=True)
+    check("release gate REJECTS a package with a non-sample note", ok is False)
+    check("  and names the sample tag and the offending count",
+          export_apkg.SAMPLE_TAG in msg and "1 of 3" in msg, msg)
+
+    # --- 10. The same leaky package is fine for local iteration ------------
+    ok, msg = run_verify(leaky, 3)
+    check("local mode still accepts a leaky package (gate is release-only)", ok is True, msg)
 
     print()
     print(f"{PASS} passed, {FAIL} failed")

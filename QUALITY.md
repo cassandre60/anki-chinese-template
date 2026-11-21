@@ -193,6 +193,12 @@ mechanically verified*. Code implements; tests enforce.
 - Python tooling stays stdlib-only (test-only deps allowed); backups use
   microsecond timestamps; snapshots happen **before** any overwrite; empty
   live state aborts sync.
+- **A release never ships non-sample notes.** In `--release` mode
+  `export_apkg.py` re-opens the package and requires every note to carry
+  the `anki-chinese-template-sample` tag; any other note aborts
+  publication (`finish.sh` full runs pass `--release`, `--local` does
+  not). `My Life Decks::Chinese` is also a study deck, so the live-deck
+  export is not a safe release source on its own.
 - `bootstrap_chinese_model.py` refuses to run when the model already
   exists — note-type creation is never a repeatable release step.
 - `finish.sh` no-op runs never publish a release.

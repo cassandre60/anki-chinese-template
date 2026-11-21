@@ -88,7 +88,8 @@ Chain (stops on first failure): `0.` `./verify` (side-effect-free gate) →
 `backups/<timestamp>/`) → `3.` `export_apkg.py` (deck `My Life Decks::Chinese`
 → gitignored `dist/*.apkg` via `exportPackage`, then **re-opened and
 verified** by reading `collection.anki21`; hard-fails on a mismatch — ADR
-009) → `4.` commit → `5.` push
+009; full runs add `--release`, which refuses any package containing a
+note not tagged `anki-chinese-template-sample`) → `4.` commit → `5.` push
 main → `6.` `gh release create --target main` (tag points at the pushed
 commit) → fetch the remote tag. The apkg ships as a Release asset, never in
 the repo. Do not skip, reorder, or substitute steps.

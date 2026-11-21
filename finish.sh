@@ -23,7 +23,9 @@
 #                        what Anki receives in step 2, so it never lags)
 #   2. sync_to_anki.py — push templates+CSS into Anki via Anki-Connect
 #                        (also snapshots live Anki state into backups/)
-#   3. export_apkg.py   — export dist/*.apkg from the live deck, then verify it
+#   3. export_apkg.py   — export dist/*.apkg from the live deck, then verify
+#                        it; full runs add the sample-tag release gate
+#                        (a release must never ship non-sample study cards)
 #   4. git commit     — stage everything (incl. chat_history log) & commit
 #   5. git push main  — push the commit to origin/main FIRST so the tag
 #                        points at the exact pushed release commit
@@ -122,7 +124,11 @@ echo "==> [1/6] Syncing templates to Anki (Anki-Connect)"
 python3 sync_to_anki.py
 
 echo "==> [2/6] Exporting + verifying dist/*.apkg"
-python3 export_apkg.py
+if [ "$LOCAL" -eq 1 ]; then
+  python3 export_apkg.py
+else
+  python3 export_apkg.py --release
+fi
 
 echo "==> [3/6] Committing changes"
 git add -A

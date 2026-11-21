@@ -34,3 +34,7 @@ flags should not display in front card
 review recent commits
 anywork that you transposrt to chinaease template we need toimport to it
 before doinganything tell me your findings andrecommandations
+
+---
+
+Protect the release first (Recommended)

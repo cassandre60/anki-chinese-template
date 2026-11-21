@@ -30,6 +30,14 @@ WHY THE VERIFICATION READS `collection.anki21` AND NOT `collection.anki2`
     fine for the wrong reasons. (This repo shipped exactly that mistake
     once; see docs/adr/009.) `collection.anki21` is the only file to trust.
 
+STEP 3 — release gate (`--release`)
+    `My Life Decks::Chinese` is also a real study deck, so a naive export
+    of it ships every mined card the maintainer has. With `--release` the
+    package is additionally required to contain ONLY notes tagged
+    `anki-chinese-template-sample`; any other note aborts publication.
+    Local runs (`finish.sh --local`) skip this stricter gate so iteration
+    and commits are never blocked by the live deck's contents.
+
 Requires: Anki running with Anki-Connect.
 Standard library only.
 """
@@ -45,6 +53,7 @@ import zipfile
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 MODEL_NAME = "Chinese Note type (Sentence card by Default)"
 DECK_NAME = "My Life Decks::Chinese"
+SAMPLE_TAG = "anki-chinese-template-sample"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXPORT_PATH = os.path.join(SCRIPT_DIR, "dist", "anki-chinese-template.apkg")
 LEGACY_DB = "collection.anki21"
@@ -110,7 +119,24 @@ def inspect(path):
             notes)
 
 
-def verify(expected_notes):
+def non_sample_notes(path):
+    """How many notes in the LEGACY database lack the sample tag.
+
+    Anki tag lists are space-delimited (``" tag1 tag2 "``), so a substring
+    test is the same check Anki's own search does for a single tag.
+    """
+    with zipfile.ZipFile(path) as z:
+        with tempfile.TemporaryDirectory() as td:
+            z.extract(LEGACY_DB, td)
+            con = sqlite3.connect(os.path.join(td, LEGACY_DB))
+            try:
+                rows = con.execute("select tags from notes").fetchall()
+            finally:
+                con.close()
+    return sum(1 for (tags,) in rows if SAMPLE_TAG not in (tags or ""))
+
+
+def verify(expected_notes, require_samples=False):
     problems = []
     try:
         model_names, deck_names, note_count = inspect(EXPORT_PATH)
@@ -126,24 +152,37 @@ def verify(expected_notes):
     if note_count != expected_notes:
         problems.append(
             f"the package has {note_count} notes, but the deck has {expected_notes} cards")
+    if require_samples:
+        offenders = non_sample_notes(EXPORT_PATH)
+        if offenders:
+            problems.append(
+                f"{offenders} of {note_count} notes are not tagged "
+                f"'{SAMPLE_TAG}', so the release would ship real study cards")
 
     if problems:
         print("ERROR: the exported apkg is not what the release promises:")
         for p in problems:
             print(f"  - {p}")
+        if require_samples:
+            print("       Isolate the sample notes in their own deck (or clean "
+                  "the deck) before publishing; `./finish.sh --local` still "
+                  "lets you keep working and commit.")
         print("       Refusing to publish. The file is kept at "
               f"{os.path.relpath(EXPORT_PATH, SCRIPT_DIR)} for inspection.")
         return False
     return True
 
 
-def main() -> int:
+def main(argv=None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    require_samples = "--release" in args
     expected = export()
-    if not verify(expected):
+    if not verify(expected, require_samples=require_samples):
         return 1
+    gate = ", release gate: sample-tagged only" if require_samples else ""
     print(f"Export OK: {EXPORT_PATH} "
           f"({os.path.getsize(EXPORT_PATH) / 1e6:.2f} MB, {expected} card(s), "
-          f"verified: '{MODEL_NAME}' present in {LEGACY_DB})")
+          f"verified: '{MODEL_NAME}' present in {LEGACY_DB}{gate})")
     return 0
 
 
