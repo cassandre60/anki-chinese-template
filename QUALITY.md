@@ -120,6 +120,13 @@ mechanically verified*. Code implements; tests enforce.
   full extended definition) lives inside `.more-section`, toggleable via
   `详情 ▾` / `关闭 ▴`; the toggle and section self-remove when no secondary
   content exists.
+- `{{Tags}}` is not shown by default. Only explicit `详情 ▾` / `C` reveal
+  shows the tags as a fixed bar pinned to the viewport bottom. The bar
+  lives inside `.card-wrapper` (outside `.card-container`) so
+  `position:fixed` works without trapping, and it is automatically
+  cleaned up when Anki advances to the next card. No scrolling needed —
+  tags are always visible at the screen bottom. Closing hides the bar;
+  the next card starts clean. No default tags bar; `R` remains Anki-owned.
 - Content hierarchy communicates card mode directly: no retrieval-state
   badges, captions, or dashboard metadata.
 - Keyboard shortcuts on the back: `P` toggles Pinyin visibility, `T` reveals

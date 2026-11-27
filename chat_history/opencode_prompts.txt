@@ -78,3 +78,7 @@ Publish v0.3.0 now (Recommended)
 ---
 
 apply what you did this session(and adapting if needed) to chinese template too
+
+---
+
+i added something in jpn template, also i'm rotating it to other one

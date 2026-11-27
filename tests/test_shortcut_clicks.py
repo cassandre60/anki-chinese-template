@@ -58,7 +58,7 @@ def load_functions():
         back = f.read()
     funcs = {}
     missing = []
-    for name in ("toggleMore", "expandDefinition", "applyShortcut",
+    for name in ("toggleMore", "showTagsBar", "hideTagsBar", "expandDefinition", "applyShortcut",
                  "initCardShortcuts"):
         m = re.search(r"window\.%s = function.*?^\s{4}\};" % name, back, re.S | re.M)
         if not m:
@@ -92,14 +92,22 @@ def build_html(funcs, hints, with_translation=True, with_more=True):
         '<button type="button" class="more-toggle" aria-expanded="false">'
         '<span class="more-text">详情</span> <span class="more-caret">▾</span></button>'
     ) if with_more else ""
+    tags_bar = (
+        '<div class="tags-bar" hidden>'
+        '<div class="tags-source" hidden>tag-a tag-b</div>'
+        '<div class="tags-pills"></div>'
+        '</div>'
+    ) if with_more else ""
     return f"""<!doctype html><html><head><meta charset="utf-8"></head><body>
-<div class="card-wrapper back-card"><div class="card-container">
+<div id="qa"><div class="card-wrapper back-card"><div class="card-container">
 <div class="sentence-display">静下心来聆听<b>音乐</b>。</div>
 <div class="pinyin-display">jìng xià xīn lái</div>
 <div class="definition-box primary-definition">把水澄清。</div>
 {translation}
 {more}
 {hints}
+</div>
+{tags_bar}
 </div></div>
 <script>
 var report = {{}};
@@ -117,21 +125,29 @@ function hintEl(key) {{
 }}
 function state() {{
   var wrapper = document.querySelector('.card-wrapper.back-card');
-  var box = wrapper.querySelector('.translation-box');
-  var btn = wrapper.querySelector('.more-toggle');
-  var def = wrapper.querySelector('.primary-definition');
-  var sec = wrapper.querySelector('.more-section');
+  var box = wrapper ? wrapper.querySelector('.translation-box') : null;
+  var btn = wrapper ? wrapper.querySelector('.more-toggle') : null;
+  var def = wrapper ? wrapper.querySelector('.primary-definition') : null;
+  var sec = wrapper ? wrapper.querySelector('.more-section') : null;
+  var tagsBar = document.querySelector('.tags-bar');
   return {{
-    pinyinHidden: wrapper.classList.contains('pinyin-hidden'),
+    pinyinHidden: wrapper ? wrapper.classList.contains('pinyin-hidden') : false,
     translation: box ? box.classList.contains('revealed') : null,
     translationAria: box ? box.getAttribute('aria-expanded') : null,
     moreOpen: btn ? btn.getAttribute('aria-expanded') : null,
     moreHidden: sec ? sec.hidden : null,
-    defExpanded: def ? def.classList.contains('is-expanded') : null
+    defExpanded: def ? def.classList.contains('is-expanded') : null,
+    tagsPanel: !!document.querySelector('.tags-panel'),
+    tagsVisible: !!(tagsBar && !tagsBar.hidden),
+    tagsBarInWrapper: !!(tagsBar && tagsBar.closest('.card-wrapper.back-card')),
+    notOnBody: !document.body.querySelector(':scope > .tags-bar'),
+    tagsBarCount: document.querySelectorAll('.tags-bar').length
   }};
 }}
 try {{
 {funcs['toggleMore']}
+{funcs['showTagsBar']}
+{funcs['hideTagsBar']}
 {funcs['expandDefinition']}
 {funcs['applyShortcut']}
 {funcs['initCardShortcuts']}
@@ -156,6 +172,7 @@ tap('.shortcut-item[data-shortcut="x"]');
 report.xOff = state();
 
 /* 3. C hint: opens More + expands the definition, then closes More. */
+report.tagsDefault = state().tagsVisible;
 tap('.shortcut-item[data-shortcut="c"]');
 report.cOn = state();
 tap('.shortcut-item[data-shortcut="c"]');
@@ -179,6 +196,11 @@ report.keyC = state().moreOpen;
 press('q');
 press('Enter');
 report.afterUnknown = state();
+report.afterCloseTags = state().tagsBarCount;
+
+/* 8. Next card transition: Anki replaces #qa. Tags must be completely gone. */
+document.getElementById('qa').innerHTML = '<div class="card-wrapper"><div class="card-container"><div class="sentence-display">Next Front</div></div></div>';
+report.nextCardHasTags = !!document.querySelector('.tags-bar');
 }} catch(e) {{ report.err = String(e && e.stack || e); }}
 document.title = 'X' + JSON.stringify(report) + 'X';
 </scr""" + "ipt></body></html>"
@@ -254,6 +276,21 @@ def main():
               r.get("cOff", {}).get("moreOpen") == "false"
               and r.get("cOff", {}).get("moreHidden") is True,
               json.dumps(r))
+        check("tags: hidden by default",
+              r.get("tagsDefault") is False, json.dumps(r))
+        check("tags: C shows fixed bar scoped to card (never on document.body)",
+              r.get("cOn", {}).get("tagsVisible") is True
+              and r.get("cOn", {}).get("tagsBarInWrapper") is True
+              and r.get("cOn", {}).get("notOnBody") is True
+              and r.get("cOn", {}).get("tagsPanel") is False,
+              json.dumps(r))
+        check("tags: C close hides them again",
+              r.get("cOff", {}).get("tagsVisible") is False,
+              json.dumps(r))
+        check("tags: never duplicated across toggles",
+              r.get("afterCloseTags") <= 1, json.dumps(r))
+        check("tags: never visible on next card",
+              r.get("nextCardHasTags") is False, json.dumps(r))
         check("C hint: never touches the translation (isolated)",
               r.get("cTranslationUntouched") is False, json.dumps(r))
         check("keyboard shortcuts still work alongside the click hints",

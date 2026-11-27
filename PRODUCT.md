@@ -117,9 +117,15 @@ off-screen context to be solvable is a bad mine and should be re-mined.
   interval request, because those calls can surface natively as false
   "Card Content Error: Failed to load" media warnings in the reviewer.
 - Tags are behavioral metadata, never decoration: hidden probes only;
-  `#listening` forces listening behavior (requires usable audio, else
-  falls back to sentence); extensible for future behavior-related tags
-  without card redesign.
+  on the back, `{{Tags}}` is hidden by default in a `.tags-bar` element
+  inside `.card-wrapper` (outside `.card-container`) and, when explicitly
+  revealed by `More ▾` / `C`, appears as a fixed bar pinned to the
+  viewport bottom with individual tag pills; no scrolling needed; closing
+  More hides the bar; because it lives inside the card wrapper,
+  navigating to the next card cleans it up automatically with no leaks
+  to the front or next card; `#listening` forces listening behavior
+  (requires usable audio, else falls back to sentence); extensible for
+  future behavior-related tags without card redesign.
 - Tooling: `sync_to_anki.py` pushes Front/Back/CSS with a pre-sync snapshot
   to `backups/<timestamp>/`; `fetch_sample_deck.py` snapshots the dedicated
   release deck into `samples/`; `build_sample_apkg.py` builds
