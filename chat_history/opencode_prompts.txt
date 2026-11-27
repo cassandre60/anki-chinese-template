@@ -74,3 +74,7 @@ continue thenif notdneidtems remain
 ---
 
 Publish v0.3.0 now (Recommended)
+
+---
+
+apply what you did this session(and adapting if needed) to chinese template too

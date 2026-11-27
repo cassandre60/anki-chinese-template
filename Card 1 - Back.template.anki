@@ -257,9 +257,11 @@
         <div class="source-footer">{{edit:Source}}</div>
       {{/Source}}
 
-      <!-- Tags display inside More section -->
+      <!-- Tags data source: hidden by default. Revealed via 详情 ▾ / C
+           as a fixed pill bar at the viewport bottom (created on
+           document.body so position:fixed works despite container queries). -->
       {{#Tags}}
-        <div class="tags-block secondary-block">{{Tags}}</div>
+        <div class="tags-source" hidden>{{Tags}}</div>
       {{/Tags}}
     </div>
 
@@ -315,6 +317,36 @@
       var textSpan = btn.querySelector('.more-text');
       if (textSpan) {
         textSpan.textContent = !isExpanded ? '关闭' : '详情';
+      }
+      var wrapper = (btn.closest && btn.closest('.card-wrapper.back-card')) || document;
+      if (!isExpanded) {
+        if (typeof window.showTagsBar === 'function') window.showTagsBar(wrapper);
+      } else {
+        if (typeof window.hideTagsBar === 'function') window.hideTagsBar();
+      }
+    };
+
+    window.showTagsBar = function(wrapper) {
+      window.hideTagsBar();
+      var src = (wrapper || document).querySelector('.tags-source');
+      if (!src) return;
+      var raw = (src.textContent || '').trim();
+      if (!raw) return;
+      var bar = document.createElement('div');
+      bar.className = 'tags-bar';
+      raw.split(/\s+/).forEach(function(tag) {
+        var pill = document.createElement('span');
+        pill.className = 'tags-bar-pill';
+        pill.textContent = tag;
+        bar.appendChild(pill);
+      });
+      document.body.appendChild(bar);
+    };
+
+    window.hideTagsBar = function() {
+      var bars = document.querySelectorAll('.tags-bar');
+      for (var i = 0; i < bars.length; i++) {
+        if (bars[i].parentNode) bars[i].parentNode.removeChild(bars[i]);
       }
     };
 
@@ -406,6 +438,7 @@
       window.addEventListener('pagehide', () => {
         const ov = document.querySelector('.lightbox-overlay');
         if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+        try { window.hideTagsBar(); } catch (_) {}
       });
     }
 
@@ -642,6 +675,7 @@
     /* --- SECONDARY SECTION CLEANUP + KEYBOARD SHORTCUTS --- */
     window.initSecondarySection = function() {
       try {
+        if (typeof window.hideTagsBar === 'function') window.hideTagsBar();
         var section = document.querySelector('.more-section');
         var btn = document.querySelector('.more-toggle');
         if (section && btn) {
